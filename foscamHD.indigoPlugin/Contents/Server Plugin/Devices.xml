@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<Devices>
+	<Device type="sensor" id="camera">
+		<Name>Camera</Name>
+		<ConfigUI>
+			<Field id="ipaddress" type="textfield" alwaysUseInDialogHeightCalc="true">
+				<Label>Host:</Label>
+				<Description>enter the hostname or ip address of your camera</Description>
+			</Field>
+			<Field id="port" type="textfield" alwaysUseInDialogHeightCalc="true">
+				<Label>Port:</Label>
+				<Description>enter the port of your camera</Description>
+			</Field>
+
+			<Field id="username" type="textfield" default="username" alwaysUseInDialogHeightCalc="true">
+				<Label>Username:</Label>
+				<Description>enter the username for your camera</Description>
+			</Field>
+
+			<Field id="password" type="textfield" default="" secure="true" alwaysUseInDialogHeightCalc="true">
+				<Label>Password:</Label>
+			</Field>
+
+		    <Field id="ShowPasswordButtonDisplayed" type="checkbox" default="true" hidden="true" alwaysUseInDialogHeightCalc="true">
+		        <Label>Show Password Button?:</Label>
+		        <Description>True if Show button displayed!</Description>
+		    </Field>
+
+		    <Field id="showPassword" type="button" visibleBindingId="ShowPasswordButtonDisplayed" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+		        <Label>Show / Hide password Below:</Label>
+		        <Title>Show </Title>
+		        <CallbackMethod>deviceShowPassword</CallbackMethod>
+		    </Field>
+
+		    <Field id="hidePassword" type="button" visibleBindingId="ShowPasswordButtonDisplayed" visibleBindingValue="false" alwaysUseInDialogHeightCalc="true">
+		        <Label>Show / Hide password Below:</Label>
+		        <Title>Hide </Title>
+		        <CallbackMethod>deviceHidePassword</CallbackMethod>
+		    </Field>
+
+			<Field id="passwordInClearText" type="textfield" default=""  secure="false" readonly="YES" alwaysUseInDialogHeightCalc="true">
+				<Label>Password:</Label>
+			</Field>
+
+		    <Field id="separator-1" type="separator" alwaysUseInDialogHeightCalc="true"/>
+		    <Field type="checkbox" id="enableFTP" defaultValue="true" tooltip="Tick to Enable FTP" alwaysUseInDialogHeightCalc="true">
+		        <Label>Enable FTP:</Label>
+		        <Description>Enable FTP snap image retrieval.</Description>
+		    </Field>
+			<Field id="ftpPort" type="textfield" default="50021" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+				<Label>Camera FTP Port:</Label>
+				<Description>Enter the FTP port of your camera</Description>
+			</Field>
+			<Field id="rootFolder" type="textfield"  default="~/Documents" alwaysUseInDialogHeightCalc="true">
+				<Label>Root Folder for FTP file save:</Label>
+				<Description>root folder for FTP file save.</Description>
+			</Field>
+
+            <Field id="separator-2" type="separator" alwaysUseInDialogHeightCalc="true"/>
+
+            <Field id="cameraPlatform" type="menu" defaultValue="0" enabledBindingId="statusPolling" tooltip="Select polling interval" alwaysUseInDialogHeightCalc="true">
+                <Label>Camera platform:</Label>
+                <List>
+                    <Option value="0">Original</Option>
+                    <Option value="1">Amba</Option>
+                </List>
+            </Field>
+            <Field id="help-1" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
+                <Label>Select the camera software platform. Newer cameras are likely to be using the Amba platform.</Label>
+            </Field>
+		    <Field id="separator-3" type="separator" alwaysUseInDialogHeightCalc="true"/>
+            <Field id="dynamicView" type="menu">
+                <Label>Dynamic Views:</Label>
+                <List class="indigo.devices" filter="com.autologplugin.indigoplugin.dynamicviewcontroller.dynamicView"/>
+            </Field>
+		    <Field id="help-2" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
+		        <Label>Select a dynamic view to be broadcast to if you want to be able to dynamically view the captured images from the camera and keep the dynamic view up-to-date (Use the Dynamic View Controller plugin to set-up a dynamic view device).</Label>
+		    </Field>
+
+		    <Field id="separator-4" type="separator" alwaysUseInDialogHeightCalc="true"/>  
+
+		    <Field id="help-3" type="label" alwaysUseInDialogHeightCalc="true">
+		        <Label>Use status polling to update the state of the camera periodically.</Label>
+		    </Field>
+		    <Field type="checkbox" id="statusPolling" defaultValue="true" tooltip="Tick to turn on Camera polling" alwaysUseInDialogHeightCalc="true">
+		        <Label>Status polling:</Label>
+		        <Description>Enable camera polling.</Description>
+		    </Field>
+		    <Field id="pollingSeconds" type="menu" defaultValue="5" enabledBindingId="statusPolling" tooltip="Select polling interval" alwaysUseInDialogHeightCalc="true">
+		        <Label>Poll camera:</Label>
+		        <List>
+		            <Option value="1">Every second</Option>
+		            <Option value="2">Every 2 seconds</Option>
+		            <Option value="5">Every 5 seconds</Option>
+		            <Option value="10">Every 10 seconds</Option>
+		            <Option value="15">Every 15 seconds</Option>
+		            <Option value="30">Every 30 seconds</Option>
+		            <Option value="60">Every 60 seconds</Option>
+		        </List>
+		    </Field>
+
+		    <Field id="separator-5" type="separator" alwaysUseInDialogHeightCalc="true"/>  
+
+		    <Field id="motionDetectionInterval" type="textfield" defaultValue="30" tooltip="Specify Motion Detection Interval" alwaysUseInDialogHeightCalc="true">
+		        <Label>Detection Interval (seconds):</Label>
+		        <Description>How long active for in seconds.</Description>
+		    </Field>
+		    <Field id="help-4" type="label"  fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
+		        <Label>Specify how long the sensor should indicate "motion detected" for before it goes off. Note that this is independant of the camera but should be greater than 15 seconds (the maximum allowed to be specified in the camera set-up).</Label>
+		    </Field>
+
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>Integer</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+
+			<!---State values mapped to 'getMotionDetectConfig' command -->			
+			<State id="isEnable">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>isEnable</TriggerLabel>
+				<ControlPageLabel>isEnable</ControlPageLabel>
+			</State>
+			<State id="linkage">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>linkage</TriggerLabel>
+				<ControlPageLabel>linkage</ControlPageLabel>
+			</State>
+
+			<!---State values mapped to 'getDevState' coomand -->			
+			<State id="IOAlarm">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>IO Alarm</TriggerLabel>
+				<ControlPageLabel>IO Alarm</ControlPageLabel>
+			</State>
+			<State id="motionDetectAlarm">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Motion Detect Alarm</TriggerLabel>
+				<ControlPageLabel>Motion Detect Alarm</ControlPageLabel>
+			</State>
+			<State id="soundAlarm">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Sound Alarm</TriggerLabel>
+				<ControlPageLabel>Sound Alarm</ControlPageLabel>
+			</State>
+			<State id="record">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Record</TriggerLabel>
+				<ControlPageLabel>Record</ControlPageLabel>
+			</State>
+			<State id="sdState">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>SD Card State</TriggerLabel>
+				<ControlPageLabel>SD Card State</ControlPageLabel>
+			</State>
+			<State id="sdFreeSpace">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>SD Free Space</TriggerLabel>
+				<ControlPageLabel>SD Free Space</ControlPageLabel>
+			</State>
+			<State id="sdTotalSpace">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>SD Total Space</TriggerLabel>
+				<ControlPageLabel>SD Total Space</ControlPageLabel>
+			</State>
+			<State id="ntpState">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>NTP State</TriggerLabel>
+				<ControlPageLabel>NTP State</ControlPageLabel>
+			</State>
+			<State id="ddnsState">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>DDNSP State</TriggerLabel>
+				<ControlPageLabel>DDNSP State</ControlPageLabel>
+			</State>
+			<State id="url">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>DDNS URL</TriggerLabel>
+				<ControlPageLabel>DDNS URL</ControlPageLabel>
+			</State>
+			<State id="upnpState">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>UPNP State</TriggerLabel>
+				<ControlPageLabel>UPNP State</ControlPageLabel>
+			</State>
+			<State id="isWifiConnected">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Is WiFi Connected</TriggerLabel>
+				<ControlPageLabel>Is WiFi Connected</ControlPageLabel>
+			</State>
+			<State id="wifiConnectedAP">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>WiFi SSID</TriggerLabel>
+				<ControlPageLabel>WiFi SSID</ControlPageLabel>
+			</State>
+			<State id="infraLedState">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Infared LED State</TriggerLabel>
+				<ControlPageLabel>Infared LED State</ControlPageLabel>
+			</State>
+
+			<!--- State values mapped to 'getDevInfo' coomand -->			
+			<State id="productName">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Product Name</TriggerLabel>
+				<ControlPageLabel>Product Name</ControlPageLabel>
+			</State>
+			<State id="serialNo">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Serial Number</TriggerLabel>
+				<ControlPageLabel>Serial Number</ControlPageLabel>
+			</State>
+			<State id="devName">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Device Name</TriggerLabel>
+				<ControlPageLabel>Device Name</ControlPageLabel>
+			</State>
+			<State id="mac">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>MAC Address</TriggerLabel>
+				<ControlPageLabel>MAC Address</ControlPageLabel>
+			</State>
+			<State id="firmwareVer">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Firmware Version</TriggerLabel>
+				<ControlPageLabel>Firmware Version</ControlPageLabel>
+			</State>
+			<State id="hardwareVer">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Hardware Version</TriggerLabel>
+				<ControlPageLabel>Hardware Version</ControlPageLabel>
+			</State>
+
+			<!--- State values mapped to 'getProductModel' coomand -->			
+			<State id="model">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Model</TriggerLabel>
+				<ControlPageLabel>Model</ControlPageLabel>
+			</State>
+
+			<!--- State values mapped to 'getProductModelName' coomand -->			
+			<State id="modelName">
+				<ValueType>String</ValueType> 
+				<TriggerLabel>Model Name</TriggerLabel>
+				<ControlPageLabel>Model Name</ControlPageLabel>
+			</State>
+
+			<!--- State values managed by plugin for motion detection -->			
+			<State id="motionDetectionEnabled">
+				<ValueType>Boolean</ValueType> 
+				<TriggerLabel>Motion Detection Enabled</TriggerLabel>
+				<ControlPageLabel>Motion Detection Enabled</ControlPageLabel>
+			</State>
+			<State id="motionDetected">
+				<ValueType>Boolean</ValueType> 
+				<TriggerLabel>Motion Detected</TriggerLabel>
+				<ControlPageLabel>Motion Detected</ControlPageLabel>
+			</State>
+		</States>
+
+		<UiDisplayStateId>status</UiDisplayStateId>		
+	</Device>
+</Devices>

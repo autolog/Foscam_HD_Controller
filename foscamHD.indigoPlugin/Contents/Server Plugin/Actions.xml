@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<Actions>
+    <Action id="alarmGet" deviceFilter="self">
+        <Name>Get Motion Alarm Status</Name>
+        <CallbackMethod>motionAlarmGet</CallbackMethod>
+    </Action>
+
+    <Action id="motionAlarmEnable" deviceFilter="self">
+        <Name>Enable Motion Alarm</Name>
+        <CallbackMethod>motionAlarmEnable</CallbackMethod>
+    </Action>
+
+    <Action id="motionAlarmDisable" deviceFilter="self">
+        <Name>Disable Motion Alarm</Name>
+        <CallbackMethod>motionAlarmDisable</CallbackMethod>
+    </Action>
+
+    <Action id="motionAlarmToggle" deviceFilter="self">
+        <Name>Toggle Motion Alarm</Name>
+        <CallbackMethod>motionAlarmToggle</CallbackMethod>
+    </Action>
+
+    <Action id="linkageRingOn" deviceFilter="self">
+        <Name>Ring Tone On</Name>
+        <CallbackMethod>linkageRingOn</CallbackMethod>
+    </Action>
+    
+    <Action id="linkageRingOff" deviceFilter="self">
+        <Name>Ring Tone Off</Name>
+        <CallbackMethod>linkageRingOff</CallbackMethod>
+    </Action>
+    
+    <Action id="linkageRingToggle" deviceFilter="self">
+        <Name>Ring Tone Toggle</Name>
+        <CallbackMethod>linkageRingToggle</CallbackMethod>
+    </Action>
+    
+    <Action id="linkageSnapOn" deviceFilter="self">
+        <Name>Snap Picture On</Name>
+        <CallbackMethod>linkageSnapOn</CallbackMethod>
+    </Action>
+    
+    <Action id="linkageSnapOff" deviceFilter="self">
+        <Name>Snap Picture Off</Name>
+        <CallbackMethod>linkageSnapOff</CallbackMethod>
+    </Action>
+    
+    <Action id="linkageSnapToggle" deviceFilter="self">
+        <Name>Snap Picture Toggle</Name>
+        <CallbackMethod>linkageSnapToggle</CallbackMethod>
+    </Action>
+    
+    <Action id="updateCameraStatus" deviceFilter="self">
+        <Name>Update Camera Status</Name>
+        <CallbackMethod>updateCameraStatus</CallbackMethod>
+    </Action>
+
+    <!--- TO BE IMPLEMENTED 
+
+    <Action id="setInfraLedMode" deviceFilter="self">
+        <Name>Set Infra LED Mode</Name>
+        <ConfigUI>
+            <Field type="menu" id="infraLedMode" defaultValue="0">
+                <Label>Direction:</Label>
+                <List>
+                    <Option value="0">Auto</Option>
+                    <Option value="1">Manual</Option>
+                </List>
+            </Field>
+        </ConfigUI>
+        <CallbackMethod>setInfraLedMode</CallbackMethod>
+    </Action>
+
+    <Action id="turnInfraLedOn" deviceFilter="self">
+        <Name>Turn Infra LED On</Name>
+        <CallbackMethod>turnInfraLedOn</CallbackMethod>
+    </Action>
+
+    <Action id="turnInfraLedOff" deviceFilter="self">
+        <Name>Turn Infra LED  Off</Name>
+        <CallbackMethod>turnInfraLedOff</CallbackMethod>
+    </Action>
+
+    <Action id="move" deviceFilter="self">
+        <Name>Move Camera</Name>
+        <CallbackMethod>move</CallbackMethod>
+        <ConfigUI>
+            <Field type="menu" id="direction" defaultValue="item2">
+                <Label>Direction:</Label>
+                <List>
+                    <Option value="up">Up</Option>
+                    <Option value="down">Down</Option>
+                    <Option value="left">Left</Option>
+                    <Option value="right">Right</Option>
+                </List>
+            </Field>
+        </ConfigUI>
+    </Action>
+
+    <Action id="goToPreset" deviceFilter="self">
+        <Name>Go to preset position</Name>
+        <CallbackMethod>goToPreset</CallbackMethod>
+        <ConfigUI>
+            <Field id="preset" type="textfield">
+                <Label>Preset Id:</Label>
+                <Description>1-16</Description>
+            </Field>
+        </ConfigUI>
+    </Action>
+
+    <Action id="setPreset" deviceFilter="self">
+        <Name>Set current location as preset</Name>
+        <CallbackMethod>setPreset</CallbackMethod>
+        <ConfigUI>
+            <Field id="preset" type="textfield">
+                <Label>Preset Id:</Label>
+                <Description>1-16</Description>
+            </Field>
+        </ConfigUI>
+    </Action>
+
+    <Action id="stop" deviceFilter="self">
+        <Name>Stop Movement</Name>
+        <CallbackMethod>stop</CallbackMethod>
+    </Action>
+
+    <Action id="enableStreams" deviceFilter="self">
+        <Name>Enable Streams</Name>
+        <CallbackMethod>enable</CallbackMethod>
+    </Action>
+
+    <Action id="disableStreams" deviceFilter="self">
+        <Name>Disable Streams</Name>
+        <CallbackMethod>disable</CallbackMethod>
+    </Action>
+    
+ -->
+</Actions>
