@@ -85,6 +85,10 @@ The configuration options are:
     Location where you want the camera images stored on your Mac.
     Note : No trailing slash '/'
 
+* **Camera platform**
+
+    Select the camera software platform. Newer cameras are likely to be using the *Amba* platform.
+
 * **Dynamic Views**
 
     Select a Dynamic View from the pulldown list. This will be empty if you haven't yet setup a dynamic view, you will have to come back and update this once you have setup a dynamic view.
