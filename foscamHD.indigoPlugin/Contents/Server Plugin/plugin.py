@@ -357,8 +357,13 @@ class Plugin(indigo.PluginBase):
             self.globals['cameras'][dev.id]['password'] = dev.pluginProps['password']
             self.globals['cameras'][dev.id]['ipAddressPort'] = dev.pluginProps['ipaddress'] + ":" + dev.pluginProps['port']
             self.globals['cameras'][dev.id]['ipAddressPortName'] = (self.globals['cameras'][dev.id]['ipAddressPort'].replace('.','-')).replace(':','-')
+            self.globals['cameras'][dev.id]['enableFTP'] = dev.pluginProps.get("enableFTP", True)
             self.globals['cameras'][dev.id]['ftpPort'] = int(dev.pluginProps.get('ftport', 50021))
+            self.globals['cameras'][dev.id]['ftpFolderCamera'] = dev.pluginProps.get('ftpFolderCamera', '')
             self.globals['cameras'][dev.id]['rootFolder'] =  dev.pluginProps.get('rootFolder', '~/Documents')
+            self.globals['cameras'][dev.id]['cameraFolder'] =  dev.pluginProps.get('cameraFolder', '')
+            self.globals['cameras'][dev.id]['enableAutoTimeSync'] = dev.pluginProps.get("enableAutoTimeSync", True)
+
             self.globals['cameras'][dev.id]['cameraPlatform'] = int(dev.pluginProps.get('cameraPlatform', kOriginal))
             self.globals['cameras'][dev.id]['status'] = 'starting'
             self.globals['cameras'][dev.id]['motion'] = {}
@@ -465,8 +470,13 @@ class Plugin(indigo.PluginBase):
             props["allowOnStateChange"] = True
             dev.replacePluginPropsOnServer(props)
 
-            params = {}
 
+            if self.globals['cameras'][dev.id]['enableAutoTimeSync']:
+                params = {}
+                self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getSystemTime', params])
+
+
+            params = {}
             self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getProductModel', params])
 
             self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getProductModelName', params])
@@ -493,8 +503,15 @@ class Plugin(indigo.PluginBase):
 
         pluginProps["enableFTP"] = pluginProps.get("enableFTP", True)
         pluginProps["ftpPort"] = pluginProps.get("ftpPort", '50021')
-        pluginProps["rootFolder"] = pluginProps.get("rootFolder", '~/Documents')
 
+        pluginProps["ftpCameraFolder"] = pluginProps.get("ftpCameraFolder", '')
+        ftpCameraFolder = self.globals['cameras'][devId].get("ftpCameraFolder", '')
+        if ftpCameraFolder != '':
+            pluginProps["ftpCameraFolder"] = ftpCameraFolder
+
+        pluginProps["rootFolder"] = pluginProps.get("rootFolder", '~/Documents')
+        pluginProps["cameraFolder"] = pluginProps.get("cameraFolder", '')
+        pluginProps["enableAutoTimeSync"] = pluginProps.get("enableAutoTimeSync", True)
         pluginProps["ShowPasswordButtonDisplayed"] = pluginProps.get("ShowPasswordButtonDisplayed", True)
 
         pluginProps["dynamicView"] = pluginProps.get("dynamicView", '')

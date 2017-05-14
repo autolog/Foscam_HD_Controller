@@ -111,6 +111,49 @@ class ThreadResponseFromCamera(threading.Thread):
 
         self.globals['threads']['handleResponse'][self.cameraDevId]['threadActive'] = False
 
+    def processGetSystemTime(self, responseFromCamera):  # 'getSystemTime' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+
+# 2017-05-03 17:03:43.563 DEBUG           Plugin.DebugReceive.run                       <CGI_Result>
+#     <result>0</result>
+#     <timeSource>0</timeSource>
+#     <ntpServer>time.euro.apple.com</ntpServer>
+#     <dateFormat>0</dateFormat>
+#     <timeFormat>1</timeFormat>
+#     <timeZone>-3600</timeZone>
+#     <isDst>1</isDst>
+#     <dst>0</dst>
+#     <year>2017</year>
+#     <mon>5</mon>
+#     <day>3</day>
+#     <hour>17</hour>
+#     <minute>3</minute>
+#     <sec>43</sec>
+# </CGI_Result>
+
+
+
+
+
+
+        try:
+            keyValueList = []
+            tree = ET.ElementTree(ET.fromstring(responseFromCamera))
+            root = tree.getroot()
+            for child_of_root in root:
+                self.messageHandlingDebugLogger.debug(u"XML: '%s' = %s" % (child_of_root.tag, child_of_root.text))
+                if child_of_root.tag != 'result':
+                    keyValue = {}
+                    keyValue['key'] = child_of_root.tag
+                    keyValue['value'] = child_of_root.text
+                    keyValueList.append(keyValue)
+            self.cameraDev.updateStatesOnServer(keyValueList)
+        except StandardError, e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            self.messageHandlingDebugLogger.error(u"StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))
+
+
+
 
     def processGetMotionDetectConfig(self, responseFromCamera):  # 'motionAlarmGet' Response handling
         self.processGetMotionDetectConfig1(responseFromCamera)
@@ -274,12 +317,15 @@ class ThreadResponseFromCamera(threading.Thread):
                 motionDetectionEnabled = True
                 if motionDetectAlarm == '2':  # 2 = Detect Alarm
                     motionDetected = True
-                    if self.globals['cameras'][self.cameraDevId]['motion']['snapEnabled']:
-                        # Only retrive FTP files if Snap Enabled
+                    if (self.globals['cameras'][self.cameraDevId]['enableFTP'] and 
+                        self.globals['cameras'][self.cameraDevId]['motion']['snapEnabled']):
+                        # Only retrieve FTP files if FTP enabled and Snap Enabled
                         self.processFtpRetrieve()
                 else:  # 1 = No Alarm
-                    if  self.globals['cameras'][self.cameraDevId]['motion']['snapEnabled'] and self.globals['cameras'][self.cameraDevId]['motion']['detected']:
-                        # Only retrive FTP files if Snap Enabled and motion previously detected
+                    if (self.globals['cameras'][self.cameraDevId]['enableFTP'] and 
+                        self.globals['cameras'][self.cameraDevId]['motion']['snapEnabled'] and 
+                        self.globals['cameras'][self.cameraDevId]['motion']['detected']):
+                        # Only retrieve FTP files if FTP enabled and if Snap Enabled and motion previously detected
                         self.processFtpRetrieve()  # To pick up any files since motion detection ended
 
             self.globals['cameras'][self.cameraDevId]['motion']['detectionEnabled'] = motionDetectionEnabled
@@ -381,7 +427,13 @@ class ThreadResponseFromCamera(threading.Thread):
 
 
             alarmSaveRootFolder = self.globals['cameras'][self.cameraDevId]['rootFolder']
-            alarmSaveFolderCamera = str('%s_%s' % (self.cameraDev.states["productName"].split("+")[0], self.cameraDev.states["mac"]))  # truncate productName on '+' e.g. 'FI9831W_A1B2C3D4E5F6' (productName_mac)
+            ftpCameraFolder = str('%s_%s' % (self.cameraDev.states["productName"].split("+")[0], self.cameraDev.states["mac"]))  # truncate productName on '+' e.g. 'FI9831W_A1B2C3D4E5F6' (productName_mac)
+            self.globals['cameras'][self.cameraDevId]['ftpCameraFolder'] = ftpCameraFolder
+            if self.globals['cameras'][self.cameraDevId]['rootFolder'] == '':
+                alarmSaveFolderCamera = ftpCameraFolder
+            else:
+                alarmSaveFolderCamera = self.globals['cameras'][self.cameraDevId]['cameraFolder']
+
             alarmSaveFolderBase = str('%s/%s' % (alarmSaveRootFolder, alarmSaveFolderCamera))
             returnCode = subprocess.call(['mkdir', alarmSaveFolderBase])
             self.messageHandlingDebugLogger.debug(u"alarmSaveFolderBase [%s]: RC=%s" % (alarmSaveFolderBase, str(returnCode)))
@@ -395,7 +447,7 @@ class ThreadResponseFromCamera(threading.Thread):
                 ftp.login(str(self.globals['cameras'][self.cameraDevId]['username']), str(self.globals['cameras'][self.cameraDevId]['password']))
                 ftp.set_pasv(0)
 
-                ftpSubDirectory = str('/IPCamera/%s/snap' % (alarmSaveFolderCamera))
+                ftpSubDirectory = str('/IPCamera/%s/snap' % (ftpCameraFolder))
 
             except ftplib.error_perm, e:
                 self.messageHandlingDebugLogger.error(u"alarmFtpDateFolder: Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -422,7 +474,7 @@ class ThreadResponseFromCamera(threading.Thread):
                     self.messageHandlingDebugLogger.debug(u"Current FTP Path: '%s',  alarmFtpImageFolder: '%s'" % (currentPath, alarmFtpImageFolder))
                     ftp.cwd(alarmFtpDateFolder)
                 except ftplib.error_perm, e:
-                    if str(e) == '550':  # if folder not found - continue to next 
+                    if str(e)[0:3] == '550':  # if folder not found - continue to next 
                         continue
                     else:
                         self.messageHandlingDebugLogger.error(u"alarmFtpDateFolder: Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -437,7 +489,7 @@ class ThreadResponseFromCamera(threading.Thread):
                     self.messageHandlingDebugLogger.debug(u"Current FTP Path: '%s',  alarmFtpImageFolder: '%s'" % (currentPath, alarmFtpImageFolder))
                     ftp.cwd(alarmFtpImageFolder)
                 except ftplib.error_perm, e:
-                    if str(e) == '550':  # if folder not found - continue to next 
+                    if str(e)[0:3] == '550':  # if folder not found - continue to next 
                         continue
                     else:
                         self.messageHandlingDebugLogger.error(u"alarmFtpImageFolder: Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
