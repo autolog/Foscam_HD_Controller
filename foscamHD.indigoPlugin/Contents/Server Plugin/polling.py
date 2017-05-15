@@ -12,6 +12,7 @@ except ImportError:
 import logging
 import sys
 import threading
+from time import sleep
 
 try:
     import xml.etree.cElementTree as ET
@@ -37,9 +38,7 @@ class ThreadPolling(threading.Thread):
         self.threadStop = event
 
         self.cameraDevId = int(devId)  # Set Indigo Device id (for camera) to value passed in Thread invocation
-
         self.cameraDev = indigo.devices[self.cameraDevId]
-
         self.cameraAddress = self.cameraDev.address
         self.cameraName = self.cameraDev.name
 
@@ -47,13 +46,19 @@ class ThreadPolling(threading.Thread):
 
         self.globals['threads']['pollCamera'][self.cameraDevId]['threadActive'] = True
 
-        self.pollingLogger.info(u"'%s' [%s] has been initialised to poll at %i second intervals" % (self.cameraName, self.cameraAddress, self.globals['polling'][self.cameraDevId]['seconds']))  
+        self.pollingLogger.info(u"Initialised 'ThreadPolling' Thread for %s [%s] to poll at %i second intervals" % (self.cameraName, self.cameraAddress, self.globals['polling'][self.cameraDevId]['seconds']))  
+
 
     def run(self):
+
         try:  
             self.methodTracer.threaddebug(u"ThreadPolling")
 
-            self.pollingLogger.debug(u"'%s' [%s] Polling thread NOW running" % (self.cameraName, str(self.cameraDevId)))
+            sleep(kDelayStartPolling)  # Allow devices to start?
+
+            self.methodTracer.threaddebug(u"ThreadPolling")
+
+            self.pollingLogger.debug(u"'Polling' Thread for %s [%s] initialised and now running" % (self.cameraName, self.cameraAddress))  
 
             params = {}
             self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', 'getDevState', params])

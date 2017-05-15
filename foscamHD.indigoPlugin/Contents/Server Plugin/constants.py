@@ -10,3 +10,8 @@
 # Foscam HD Camera Platform Constants
 kOriginal = 0
 kAmba = 1
+
+# Thread Starting Delays
+kDelayStartResponseFromcamera = 2
+kDelayStartSendCommand = 3
+kDelayStartPolling = 4

@@ -53,17 +53,16 @@ class ThreadResponseFromCamera(threading.Thread):
 
         self.globals['threads']['handleResponse'][self.cameraDevId]['threadActive'] = True
 
-        self.messageHandlingDebugLogger.debug(u"Initialising 'ResponseFromCamera' Thread for %s [%s]" % (self.cameraName, self.cameraAddress))  
+        self.messageHandlingDebugLogger.debug(u"Initialised 'ResponseFromCamera' Thread for %s [%s]" % (self.cameraName, self.cameraAddress))  
   
     def run(self):
 
-        self.methodTracer.threaddebug(u"ThreadResponseFromCamera")  
-
-        sleep(2)  # Allow devices to start?
-
         try:
+            self.methodTracer.threaddebug(u"ThreadResponseFromCamera")  
 
-            self.messageHandlingDebugLogger.debug(u"ResponseFromCamera Thread initialised for %s [%s]" % (self.cameraName, self.cameraAddress))  
+            sleep(kDelayStartResponseFromcamera)  # Allow devices to start?
+
+            self.messageHandlingDebugLogger.debug(u"'ResponseFromCamera' Thread for %s [%s] initialised and now running" % (self.cameraName, self.cameraAddress))  
 
             while not self.threadStop.is_set():
                 try:

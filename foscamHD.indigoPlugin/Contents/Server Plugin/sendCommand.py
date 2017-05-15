@@ -20,6 +20,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
+from constants import *
 
 class ThreadSendCommand(threading.Thread):
 
@@ -44,32 +45,34 @@ class ThreadSendCommand(threading.Thread):
         self.methodTracer = logging.getLogger("Plugin.method")  
         self.methodTracer.setLevel(self.globals['debug']['debugMethodTrace'])
 
-        self.sendDebugLogger.debug(u"Initialising Foscam HD Send Message Thread")  
-
         self.threadStop = event
 
         self.cameraDevId = int(devId)  # Set Indigo Device id (for camera) to value passed in Thread invocation
-
         self.cameraAddress = indigo.devices[self.cameraDevId].address
         self.cameraName = indigo.devices[self.cameraDevId].name
         self.cameraIpAddressPort = self.globals['cameras'][self.cameraDevId]['ipAddressPort']
 
         self.globals['threads']['sendCommand'][self.cameraDevId]['threadActive'] = True
 
-        self.sendDebugLogger.debug(u"Initialising 'Send Command' Thread for %s [%s]" % (self.cameraName, self.cameraAddress))  
+        self.sendDebugLogger.debug(u"Initialised 'Send Command' Thread for %s [%s]" % (self.cameraName, self.cameraAddress))  
   
     def run(self):
 
-        self.methodTracer.threaddebug(u"ThreadSendCommand")
-
-        sleep(2)  # Allow devices to start?
-
         try:
-            self.sendDebugLogger.debug(u"'Send Command' Thread initialised for  %s [%s]" % (self.cameraName, self.cameraAddress))  
+            self.methodTracer.threaddebug(u"ThreadSendCommand")
+
+            sleep(kDelayStartSendCommand)  # Allow devices to start?
+
+            self.sendDebugLogger.debug(u"'Send Command' Thread for %s [%s] initialised and now running" % (self.cameraName, self.cameraAddress))  
 
             while not self.threadStop.is_set():
                 try:
+                    if self.cameraDevId not in self.globals['queues']['commandToSend']:
+                        self.sendDebugLogger.debug(u"'Send Command' Thread for %s [%s] - Queue misssing so thread being ended" % (self.cameraName, self.cameraAddress))  
+                        break
+
                     commandToHandle = self.globals['queues']['commandToSend'][self.cameraDevId].get(True,5)
+
                     if commandToHandle[0] == 'STOPTHREAD':
                         continue  # self.threadStop should be set
 

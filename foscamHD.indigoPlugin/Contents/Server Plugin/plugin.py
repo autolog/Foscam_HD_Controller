@@ -279,29 +279,6 @@ class Plugin(indigo.PluginBase):
             for self.cameraDevId in self.globals['threads']['motionTimer']:
                 self.globals['threads']['motionTimer'][self.cameraDevId].cancel()
 
-            # for self.cameraDevId in self.globals['threads']['pollCamera']:
-            #     if self.globals['threads']['pollCamera'][self.cameraDevId]['threadActive']:
-            #         self.generalLogger.debug(u"%s 'polling camera' BEING STOPPED" % (indigo.devices[self.cameraDevId].name))
-            #         self.globals['threads']['pollCamera'][self.cameraDevId]['event'].set()  # Stop the Thread
-            #         self.globals['threads']['pollCamera'][self.cameraDevId]['thread'].join(7.0)  # wait for thread to end
-            #         self.generalLogger.debug(u"%s 'polling camera' NOW STOPPED" % (indigo.devices[self.cameraDevId].name))
-
-            # for self.cameraDevId in self.globals['threads']['sendCommand']:
-            #     if self.globals['threads']['sendCommand'][self.cameraDevId]['threadActive']:
-            #         self.generalLogger.debug(u"'sendCommand' BEING STOPPED")
-            #         self.globals['threads']['sendCommand'][self.cameraDevId]['event'].set()  # Stop the Thread
-            #         self.globals['queues']['commandToSend'][self.cameraDevId].put(['STOPTHREAD'])
-            #         self.globals['threads']['sendCommand'][self.cameraDevId]['thread'].join(7.0)  # wait for thread to end
-            #         self.generalLogger.debug(u"'sendCommand' NOW STOPPED")
-
-            # for self.cameraDevId in self.globals['threads']['handleResponse']:
-            #     if self.globals['threads']['handleResponse'][self.cameraDevId]['threadActive']:
-            #         self.generalLogger.debug(u"''handleResponse' BEING STOPPED")
-            #         self.globals['threads']['handleResponse'][self.cameraDevId]['event'].set()  # Stop the Thread
-            #         self.globals['queues']['responseFromCamera'][self.cameraDevId].put(['STOPTHREAD'])
-            #         self.globals['threads']['handleResponse'][self.cameraDevId]['thread'].join(7.0)  # wait for thread to end
-            #         self.generalLogger.debug(u"''handleResponse' NOW STOPPED")
-
             for self.cameraDevId in self.globals['threads']['pollCamera']:
                 if self.globals['threads']['pollCamera'][self.cameraDevId]['threadActive']:
                     self.generalLogger.debug(u"%s 'polling camera' BEING STOPPED" % (indigo.devices[self.cameraDevId].name))
@@ -389,10 +366,18 @@ class Plugin(indigo.PluginBase):
             self.globals['cameras'][dev.id]['motion']['lastDisplayedImageDay'] = ''
             self.globals['cameras'][dev.id]['motion']['lastDisplayedImageSelected'] = ''
 
+            updatePropsRequired = False
             self.props = dev.pluginProps
-            self.props['address'] = self.globals['cameras'][dev.id]['ipAddressPort']
-            self.props['AllowOnStateChange'] = True
-            dev.replacePluginPropsOnServer(self.props)
+            if 'address' not in self.props or self.props['address'] != self.globals['cameras'][dev.id]['ipAddressPort']:
+                self.props['address'] = self.globals['cameras'][dev.id]['ipAddressPort']
+                updatePropsRequired = True
+            if 'AllowOnStateChange' not in self.props or self.props['AllowOnStateChange'] != True:   
+                self.props['AllowOnStateChange'] = True
+                updatePropsRequired = True
+            if updatePropsRequired:
+                self.generalLogger.debug(u"Updating props and restarting device %s ..." % (indigo.devices[dev.id].name))
+                dev.replacePluginPropsOnServer(self.props)
+                return
 
             if 'commandToSend' in self.globals['queues']:
                 if dev.id in self.globals['queues']['commandToSend']:
@@ -466,15 +451,9 @@ class Plugin(indigo.PluginBase):
 
             indigo.devices[dev.id].setErrorStateOnServer(u"no ack")  # default to "no ack" at device startup - will be corrected when communication established
 
-            props = dev.pluginProps
-            props["allowOnStateChange"] = True
-            dev.replacePluginPropsOnServer(props)
-
-
             if self.globals['cameras'][dev.id]['enableAutoTimeSync']:
                 params = {}
                 self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getSystemTime', params])
-
 
             params = {}
             self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getProductModel', params])
@@ -492,6 +471,7 @@ class Plugin(indigo.PluginBase):
                 # kAmba
                 self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getMotionDetectConfig1', params])
 
+            self.generalLogger.debug(u"%s Device Start Completed" % (indigo.devices[dev.id].name))
         except StandardError, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             self.generalLogger.error(u"deviceStartComm: StandardError detected for '%s' at line '%s' = %s" % (dev.name, exc_tb.tb_lineno,  e))   
@@ -505,9 +485,10 @@ class Plugin(indigo.PluginBase):
         pluginProps["ftpPort"] = pluginProps.get("ftpPort", '50021')
 
         pluginProps["ftpCameraFolder"] = pluginProps.get("ftpCameraFolder", '')
-        ftpCameraFolder = self.globals['cameras'][devId].get("ftpCameraFolder", '')
-        if ftpCameraFolder != '':
-            pluginProps["ftpCameraFolder"] = ftpCameraFolder
+        if devId in self.globals['cameras']:
+            ftpCameraFolder = self.globals['cameras'][devId].get("ftpCameraFolder", '')
+            if ftpCameraFolder != '':
+                pluginProps["ftpCameraFolder"] = ftpCameraFolder
 
         pluginProps["rootFolder"] = pluginProps.get("rootFolder", '~/Documents')
         pluginProps["cameraFolder"] = pluginProps.get("cameraFolder", '')
@@ -570,42 +551,50 @@ class Plugin(indigo.PluginBase):
         return valuesDict
 
     def deviceStopComm(self, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        if dev.id in self.globals['threads']['motionTimer']:
-            self.globals['cameras'][dev.id]['motion']['timerActive'] = False
-            self.globals['threads']['motionTimer'][dev.id].cancel()
+        try:
+            if dev.id in self.globals['threads']['motionTimer']:
+                self.globals['cameras'][dev.id]['motion']['timerActive'] = False
+                self.globals['threads']['motionTimer'][dev.id].cancel()
 
-        if dev.id in self.globals['threads']['pollCamera'] and self.globals['threads']['pollCamera'][dev.id]['threadActive']:
-            self.generalLogger.debug(u"%s 'polling camera' BEING STOPPED" % (indigo.devices[dev.id].name))
-            self.globals['threads']['pollCamera'][dev.id]['event'].set()  # Stop the Thread
-            self.globals['threads']['pollCamera'][dev.id]['thread'].join(7.0)  # wait for thread to end
-            self.generalLogger.debug(u"%s 'polling camera' NOW STOPPED" % (indigo.devices[dev.id].name))
-            self.globals['threads']['pollCamera'].pop(dev.id, None)  # Remove Thread
+            if dev.id in self.globals['threads']['pollCamera'] and self.globals['threads']['pollCamera'][dev.id]['threadActive']:
+                # self.generalLogger.debug(u"%s 'polling camera' BEING STOPPED" % (indigo.devices[dev.id].name))
+                self.generalLogger.debug(u"Device Stop: %s 'polling camera' BEING STOPPED" % (dev.name))
+                self.globals['threads']['pollCamera'][dev.id]['event'].set()  # Stop the Thread
+                self.globals['threads']['pollCamera'][dev.id]['thread'].join(7.0)  # wait for thread to end
+                # self.generalLogger.debug(u"%s 'polling camera' NOW STOPPED" % (indigo.devices[dev.id].name))
+                self.generalLogger.debug(u"Device Stop: %s 'polling camera' NOW STOPPED" % (dev.name))
+                self.globals['threads']['pollCamera'].pop(dev.id, None)  # Remove Thread
 
 
-        if dev.id in self.globals['threads']['sendCommand'] and self.globals['threads']['sendCommand'][dev.id]['threadActive']:
-            self.generalLogger.debug(u"'sendCommand' BEING STOPPED")
-            self.globals['threads']['sendCommand'][dev.id]['event'].set()  # Stop the Thread
-            self.globals['queues']['commandToSend'][dev.id].put(['STOPTHREAD'])
-            self.globals['threads']['sendCommand'][dev.id]['thread'].join(7.0)  # wait for thread to end
-            self.generalLogger.debug(u"'sendCommand' NOW STOPPED")
-            self.globals['threads']['sendCommand'].pop(dev.id, None)  # Remove Thread
+            if dev.id in self.globals['threads']['sendCommand'] and self.globals['threads']['sendCommand'][dev.id]['threadActive']:
+                self.generalLogger.debug(u"Device Stop: 'sendCommand' BEING STOPPED")
+                self.globals['threads']['sendCommand'][dev.id]['event'].set()  # Stop the Thread
+                self.globals['queues']['commandToSend'][dev.id].put(['STOPTHREAD'])
+                self.globals['threads']['sendCommand'][dev.id]['thread'].join(7.0)  # wait for thread to end
+                self.generalLogger.debug(u"Device Stop: 'sendCommand' NOW STOPPED")
+                self.globals['threads']['sendCommand'].pop(dev.id, None)  # Remove Thread
 
-        if dev.id in self.globals['threads']['handleResponse'] and self.globals['threads']['handleResponse'][dev.id]['threadActive']:
-            self.generalLogger.debug(u"''handleResponse' BEING STOPPED")
-            self.globals['threads']['handleResponse'][dev.id]['event'].set()  # Stop the Thread
-            self.globals['queues']['responseFromCamera'][dev.id].put(['STOPTHREAD'])
-            self.globals['threads']['handleResponse'][dev.id]['thread'].join(7.0)  # wait for thread to end
-            self.generalLogger.debug(u"''handleResponse' NOW STOPPED")
-            self.globals['threads']['handleResponse'].pop(dev.id, None)  # Remove Thread
+            if dev.id in self.globals['threads']['handleResponse'] and self.globals['threads']['handleResponse'][dev.id]['threadActive']:
+                self.generalLogger.debug(u"Device Stop: 'handleResponse' BEING STOPPED")
+                self.globals['threads']['handleResponse'][dev.id]['event'].set()  # Stop the Thread
+                self.globals['queues']['responseFromCamera'][dev.id].put(['STOPTHREAD'])
+                self.globals['threads']['handleResponse'][dev.id]['thread'].join(7.0)  # wait for thread to end
+                self.generalLogger.debug(u"Device Stop: 'handleResponse' NOW STOPPED")
+                self.globals['threads']['handleResponse'].pop(dev.id, None)  # Remove Thread
 
-        if 'commandToSend' in self.globals['queues']:
-            self.globals['queues']['commandToSend'].pop(dev.id, None)  # Remove Queue
+            if 'commandToSend' in self.globals['queues']:
+                self.globals['queues']['commandToSend'].pop(dev.id, None)  # Remove Queue
 
-        if 'responseFromCamera' in self.globals['queues']:
-            self.globals['queues']['responseFromCamera'].pop(dev.id, None)  # Remove Queue
+            if 'responseFromCamera' in self.globals['queues']:
+                self.globals['queues']['responseFromCamera'].pop(dev.id, None)  # Remove Queue
 
-        self.globals['cameras'].pop(dev.id, None)  # Remove Camera plugin internal storage
+            self.globals['cameras'].pop(dev.id, None)  # Remove Camera plugin internal storage
+
+        except StandardError, e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            self.generalLogger.error(u"deviceStopComm: StandardError detected for '%s' at line '%s' = %s" % (dev.name, exc_tb.tb_lineno,  e))   
 
 
     def checkCameraEnabled(self, dev, pluginActionName):    
