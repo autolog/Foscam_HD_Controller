@@ -20,34 +20,34 @@
         <CallbackMethod>motionAlarmToggle</CallbackMethod>
     </Action>
 
-    <Action id="linkageRingOn" deviceFilter="self">
+    <Action id="ringOn" deviceFilter="self">
         <Name>Ring Tone On</Name>
-        <CallbackMethod>linkageRingOn</CallbackMethod>
+        <CallbackMethod>ringOn</CallbackMethod>
     </Action>
     
-    <Action id="linkageRingOff" deviceFilter="self">
+    <Action id="ringOff" deviceFilter="self">
         <Name>Ring Tone Off</Name>
-        <CallbackMethod>linkageRingOff</CallbackMethod>
+        <CallbackMethod>ringOff</CallbackMethod>
     </Action>
     
-    <Action id="linkageRingToggle" deviceFilter="self">
+    <Action id="ringToggle" deviceFilter="self">
         <Name>Ring Tone Toggle</Name>
-        <CallbackMethod>linkageRingToggle</CallbackMethod>
+        <CallbackMethod>ringToggle</CallbackMethod>
     </Action>
     
-    <Action id="linkageSnapOn" deviceFilter="self">
+    <Action id="snapOn" deviceFilter="self">
         <Name>Snap Picture On</Name>
-        <CallbackMethod>linkageSnapOn</CallbackMethod>
+        <CallbackMethod>snapOn</CallbackMethod>
     </Action>
     
-    <Action id="linkageSnapOff" deviceFilter="self">
+    <Action id="snapOff" deviceFilter="self">
         <Name>Snap Picture Off</Name>
-        <CallbackMethod>linkageSnapOff</CallbackMethod>
+        <CallbackMethod>snapOff</CallbackMethod>
     </Action>
     
-    <Action id="linkageSnapToggle" deviceFilter="self">
+    <Action id="snapToggle" deviceFilter="self">
         <Name>Snap Picture Toggle</Name>
-        <CallbackMethod>linkageSnapToggle</CallbackMethod>
+        <CallbackMethod>snapToggle</CallbackMethod>
     </Action>
     
     <Action id="updateCameraStatus" deviceFilter="self">

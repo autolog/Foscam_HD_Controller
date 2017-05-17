@@ -61,7 +61,7 @@ class ThreadPolling(threading.Thread):
             self.pollingLogger.debug(u"'Polling' Thread for %s [%s] initialised and now running" % (self.cameraName, self.cameraAddress))  
 
             params = {}
-            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', 'getDevState', params])
+            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getDevState',), params])
 
             self.pollingLogger.debug(u"'%s' [%s] Polling thread NOW running and command queued" % (self.cameraName, self.cameraAddress))
 
@@ -86,7 +86,7 @@ class ThreadPolling(threading.Thread):
                     break
 
                 params = {}
-                self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', 'getDevState', params])
+                self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getDevState',), params])
 
             self.pollingLogger.debug(u"Polling thread for camera %s [%s] ending" % (self.cameraName, self.cameraAddress)) 
 

@@ -325,8 +325,6 @@ class Plugin(indigo.PluginBase):
         try:
             self.globals['cameras'][dev.id] = {}
 
-            self.globals['cameras'][dev.id]['savedConfigDict'] = {}  # Handles 'isEnable'and 'linkage'
-
             self.globals['cameras'][dev.id]['datetimeStarted'] = self.currentTime
             self.globals['cameras'][dev.id]['ipAddress'] = dev.pluginProps.get('ipaddress', 'unknown')
             self.globals['cameras'][dev.id]['port'] = dev.pluginProps['port']
@@ -344,8 +342,10 @@ class Plugin(indigo.PluginBase):
             self.globals['cameras'][dev.id]['cameraPlatform'] = int(dev.pluginProps.get('cameraPlatform', kOriginal))
             self.globals['cameras'][dev.id]['status'] = 'starting'
             self.globals['cameras'][dev.id]['motion'] = {}
-            self.globals['cameras'][dev.id]['motion']['detectionEnabled'] = False
-            self.globals['cameras'][dev.id]['motion']['detected'] = False
+            self.globals['cameras'][dev.id]['motion']['setMotionDetectConfigFunction'] = kNotSet  # kNotSet, kEnableMotionDetect, kRing, kSnapPicture
+            self.globals['cameras'][dev.id]['motion']['setMotionDetectConfigOption'] = kNotSet  # kNotSet, kOn, kOff, kToggle
+            # self.globals['cameras'][dev.id]['motion']['detectionEnabled'] = False
+            self.globals['cameras'][dev.id]['motion']['previouslyDetected'] = False
             self.globals['cameras'][dev.id]['motion']['detectionInterval'] = float(dev.pluginProps.get('motionDetectionInterval', 30.0))
             self.globals['cameras'][dev.id]['motion']['dynamicView'] = str(dev.pluginProps.get('dynamicView', ''))
             self.globals['cameras'][dev.id]['motion']['timerActive'] = False
@@ -423,28 +423,29 @@ class Plugin(indigo.PluginBase):
                 self.globals['threads']['pollCamera'][dev.id]['thread'].join(7.0)  # wait for thread to end
                 self.generalLogger.debug(u"%s 'polling camera' NOW STOPPED" % (indigo.devices[dev.id].name))
 
-            self.globals['polling'][dev.id] = {}
-            self.globals['polling'][dev.id]['status']    = True
-            self.globals['polling'][dev.id]['seconds']   = float(self.props['pollingSeconds'])
+            if self.props["statusPolling"]:
+                self.globals['polling'][dev.id] = {}
+                self.globals['polling'][dev.id]['status']    = True
+                self.globals['polling'][dev.id]['seconds']   = float(self.props['pollingSeconds'])
 
-            self.globals['threads']['pollCamera'][dev.id] = {}
-            self.globals['threads']['pollCamera'][dev.id]['threadActive'] = False
-            self.globals['threads']['pollCamera'][dev.id]['event'] = threading.Event()
-            self.globals['threads']['pollCamera'][dev.id]['thread'] = ThreadPolling(self.globals, dev.id, self.globals['threads']['pollCamera'][dev.id]['event'])
-            self.globals['threads']['pollCamera'][dev.id]['thread'].start() 
+                self.globals['threads']['pollCamera'][dev.id] = {}
+                self.globals['threads']['pollCamera'][dev.id]['threadActive'] = False
+                self.globals['threads']['pollCamera'][dev.id]['event'] = threading.Event()
+                self.globals['threads']['pollCamera'][dev.id]['thread'] = ThreadPolling(self.globals, dev.id, self.globals['threads']['pollCamera'][dev.id]['event'])
+                self.globals['threads']['pollCamera'][dev.id]['thread'].start() 
 
             keyValueList = []
             keyValue = {}
             keyValue['key'] = 'motionDetectionEnabled'
-            keyValue['value'] = self.globals['cameras'][dev.id]['motion']['detectionEnabled']
+            keyValue['value'] = False
             keyValueList.append(keyValue)
             keyValue = {}
             keyValue['key'] = 'motionDetected'
-            keyValue['value'] = self.globals['cameras'][dev.id]['motion']['detected']
+            keyValue['value'] = False
             keyValueList.append(keyValue)
             keyValue = {}
             keyValue['key'] = 'onOffState'
-            keyValue['value'] = self.globals['cameras'][dev.id]['motion']['timerActive']
+            keyValue['value'] = False
             keyValueList.append(keyValue)
             dev.updateStatesOnServer(keyValueList)
             dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
@@ -453,23 +454,18 @@ class Plugin(indigo.PluginBase):
 
             if self.globals['cameras'][dev.id]['enableAutoTimeSync']:
                 params = {}
-                self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getSystemTime', params])
+                self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getSystemTime',), params])
 
             params = {}
-            self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getProductModel', params])
+            self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getProductModel',), params])
 
-            self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getProductModelName', params])
+            self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getProductModelName',), params])
 
-            self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getDevInfo', params])
+            self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getDevInfo',), params])
 
-            self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getDevState', params])
+            self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getDevState',), params])
 
-            # Determine Camera platform and process accordingly
-            if self.globals['cameras'][dev.id]['cameraPlatform'] == kOriginal:
-                self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getMotionDetectConfig', params])
-            else:
-                # kAmba
-                self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getMotionDetectConfig1', params])
+            self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig',), params])
 
             self.generalLogger.debug(u"%s Device Start Completed" % (indigo.devices[dev.id].name))
         except StandardError, e:
@@ -637,20 +633,16 @@ class Plugin(indigo.PluginBase):
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        if dev.states['motionDetectionEnabled']:
-            self.motionAlarmDisable(pluginAction, dev)
-        else:
-            self.motionAlarmEnable(pluginAction, dev)
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kEnableMotionDetect, kToggle), params])
 
     def motionAlarmEnable(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        dev.updateStateOnServer(key="isEnable", value='1')  # 1 (isEnable) = ON
-
-        self.setMotionDetectConfig(pluginAction, dev)
-        self.generalLogger.info(u'sent "%s" %s' % (dev.name, "enable motion detection alarm"))
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kEnableMotionDetect, kOn), params])
 
 
     def motionAlarmDisable(self, pluginAction, dev):
@@ -658,10 +650,8 @@ class Plugin(indigo.PluginBase):
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        dev.updateStateOnServer(key="isEnable", value='0')  # 0 (isEnable) = OFF
-
-        self.setMotionDetectConfig(pluginAction, dev)
-        self.generalLogger.info(u'sent "%s" %s' % (dev.name, "disable motion detection alarm"))
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kEnableMotionDetect, kOff), params])
 
 
     def updateCameraStatus(self, pluginAction, dev):
@@ -672,7 +662,7 @@ class Plugin(indigo.PluginBase):
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
         params = {}
-        self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getDevState', params])
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getDevState',), params])
         self.generalLogger.info(u'sent "%s" %s' % (dev.name, "request status"))
 
     def motionAlarmGet(self, pluginAction, dev):
@@ -681,114 +671,58 @@ class Plugin(indigo.PluginBase):
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
         params = {}
-        # Determine Camera platform and process accordingly
-        if self.globals['cameras'][dev.id]['cameraPlatform'] == kOriginal:
-            self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getMotionDetectConfig', params])
-        else:
-            # kAmba
-            self.globals['queues']['commandToSend'][dev.id].put(['camera', 'getMotionDetectConfig1', params])
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig',), params])
 
-    def linkageRingToggle(self, pluginAction, dev):
+    def ringToggle(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        ring = int(dev.states["linkage"]) & 1  # Get Ring state (bit 0)
-        if ring == 0:
-            self.linkageRingOn(pluginAction, dev)
-        else:
-            self.linkageRingOff(pluginAction, dev)
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kRing, kToggle), params])
 
-
-    def linkageRingOn(self, pluginAction, dev):
+    def ringON(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        linkage = int(dev.states["linkage"]) | 1  # Turn ON bit 0
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kRing, kOn), params])
 
-        dev.updateStateOnServer(key="linkage", value=linkage)
-
-        self.setMotionDetectConfig(pluginAction, dev)
-
-
-    def linkageRingOff(self, pluginAction, dev):
+    def ringOFF(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        linkage = int(dev.states["linkage"]) & ~1  # Turn OFF bit 0
-
-        dev.updateStateOnServer(key="linkage", value=linkage)
-
-        self.setMotionDetectConfig(pluginAction, dev)
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kRing, kOff), params])
 
 
-    def linkageSnapToggle(self, pluginAction, dev):
+    def snapToggle(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        snap = int(dev.states["linkage"]) & 4  # Get Snap state (bit 2)
-        if snap == 0:
-            self.linkageSnapOn(pluginAction, dev)
-        else:
-            self.linkageSnapOff(pluginAction, dev)
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kSnapPicture, kToggle), params])
 
 
-    def linkageSnapOn(self, pluginAction, dev):
+    def snapOn(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        linkage = int(dev.states["linkage"]) | 4  # Turn ON bit 2
-
-        dev.updateStateOnServer(key="linkage", value=linkage)
-
-        self.setMotionDetectConfig(pluginAction, dev)
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kSnapPicture, kOn), params])
 
 
-    def linkageSnapOff(self, pluginAction, dev):
+    def snapOff(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
-        linkage = int(dev.states["linkage"]) & ~4  # Turn OFF bit 2
-
-        dev.updateStateOnServer(key="linkage", value=linkage)
-
-        self.setMotionDetectConfig(pluginAction, dev)
-
-
-    def setMotionDetectConfig(self, pluginAction, dev):
-        self.methodTracer.threaddebug(u"CLASS: Plugin")
-    
-        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
-
-        isEnable = dev.states['isEnable']
-        linkage = dev.states['linkage']
-
-        dynamicParams = {
-            'isEnable':isEnable,
-            'linkage': linkage,
-        }
-
-        params = dynamicParams.copy()
-        params.update(self.globals['cameras'][dev.id]['savedConfigDict'])
-
-        # z = x.copy()
-        # z.update(y)
-
-        self.generalLogger.debug(u'SET MOTION DETECT CONFIG for %s : %s' % (dev.name, params))
-
-        # Determine Camera platform and process accordingly
-        if self.globals['cameras'][dev.id]['cameraPlatform'] == kOriginal:
-            self.generalLogger.debug(u'SET MOTION DETECT CONFIG [ORIGINAL] for %s : %s' % (dev.name, params))
-            self.globals['queues']['commandToSend'][dev.id].put(['camera', 'setMotionDetectConfig', params])
-        else:
-            # kAmba
-            self.generalLogger.debug(u'SET MOTION DETECT CONFIG [AMBA] for %s : %s' % (dev.name, params))
-            self.globals['queues']['commandToSend'][dev.id].put(['camera', 'setMotionDetectConfig1', params])
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kSnapPicture, kOff), params])
 
 
     def snap(self, pluginAction, dev):
@@ -797,4 +731,4 @@ class Plugin(indigo.PluginBase):
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
 
         params = {}
-        self.globals['queues']['commandToSend'][dev.id].put(['snapPicture2', params])
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('snapPicture2',), params])

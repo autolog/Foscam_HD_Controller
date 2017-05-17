@@ -15,3 +15,18 @@ kAmba = 1
 kDelayStartResponseFromcamera = 2
 kDelayStartSendCommand = 3
 kDelayStartPolling = 4
+
+# setMotionDetectConfig / setMotionDetectConfig1: Functions and options
+
+kNotSet = 0
+
+kEnableMotionDetect = 1
+kRing = 2
+kSnapPicture = 3
+
+kOn = 1
+kOff = 2
+kToggle = 3
+
+kFunction = ('','EnableMotionDetect_','Ring_','SnapPicture_')
+kOption = ('','On','Off', 'Toggle')

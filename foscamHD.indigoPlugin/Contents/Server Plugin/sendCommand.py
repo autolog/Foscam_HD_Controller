@@ -98,13 +98,23 @@ class ThreadSendCommand(threading.Thread):
                         self.methodTracer.setLevel(self.globals['debug']['debugMethodTrace'])
 
                     commandType = commandToHandle[0]  # commandType = 'camera' | 'internal'
-                    command = commandToHandle[1]
+                    commandTuple = commandToHandle[1]
+                    command = commandTuple[0]
+                    # Determine Camera platform and set command to process accordingly
+                    if (command == 'getMotionDetectConfig' or command == 'setMotionDetectConfig') and self.globals['cameras'][self.cameraDevId]['cameraPlatform'] == kAmba:
+                        command = command + '1'  
+                    commandFunction = ''
+                    commandOption = ''
+                    if len(commandToHandle[1]) > 1:
+                        commandFunction = commandToHandle[1][1]
+                        commandOption = commandToHandle[1][2]
                     params = commandToHandle[2]
 
                     self.sendDebugLogger.debug(u"Command: %s [%s]" % (command, commandType))
 
-                    if commandType == 'internal':
-                        self.globals['queues']['responseFromCamera'][self.cameraDevId].put([command, params])
+                    # Reserved for future use
+                    if commandType == 'internal':  # i.e. don't send to camera - just add it to the responseFromCamera queue to directly process it
+                        # self.globals['queues']['responseFromCamera'][self.cameraDevId].put([command, params])
                         continue
 
                     # commandType = 'camera'
@@ -191,12 +201,13 @@ class ThreadSendCommand(threading.Thread):
 
                             if resultOK == True:
                                 if command == 'snapPicture2':
-                                    self.receiveDebugLogger.debug(u"Image received from camera: %s [%s]" % (self.cameraName, self.cameraAddress)) 
+                                    self.receiveDebugLogger.debug(u"Image received from camera: %s [%s]" % (self.cameraName, self.cameraAddress))
                                 else:    
                                     self.receiveDebugLogger.debug(u"Response received from camera: %s [%s] to '%s' =\n%s" % (self.cameraName, self.cameraAddress, command, responseFromCamera))
-                                self.globals['queues']['responseFromCamera'][self.cameraDevId].put([command, responseFromCamera])
+                                self.globals['queues']['responseFromCamera'][self.cameraDevId].put([commandTuple, responseFromCamera])
                             else:
                                 self.receiveDebugLogger.error(u"'responseFromCamera' Error %s:%s [%s:%s]" % (str(result), resultUi, str(len(responseFromCamera)), responseFromCamera)) 
+                              
 
                 except StandardError, e:
                     self.receiveDebugLogger.error(u"ThreadSendCommand detected internal error. Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))   

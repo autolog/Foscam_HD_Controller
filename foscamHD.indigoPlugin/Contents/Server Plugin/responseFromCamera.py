@@ -83,7 +83,8 @@ class ThreadResponseFromCamera(threading.Thread):
                     if responseToHandle[0] == 'STOPTHREAD':
                         continue  # self.threadStop should be set
 
-                    command = responseToHandle[0]
+                    commandTuple = responseToHandle[0]
+                    command = commandTuple[0]
                     response = responseToHandle[1]
 
                     processCommandMethod = 'process' + command[0:1].upper() + command[1:]
@@ -93,7 +94,7 @@ class ThreadResponseFromCamera(threading.Thread):
                     try:                    
                         processCommandMethodMethod = getattr(self, processCommandMethod)
 
-                        processCommandMethodMethod(response)
+                        processCommandMethodMethod(commandTuple, response)
                     except StandardError, e:
                         self.messageHandlingDebugLogger.error(u"Process Command Method detected error. Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)) 
                 except Queue.Empty:
@@ -110,7 +111,7 @@ class ThreadResponseFromCamera(threading.Thread):
 
         self.globals['threads']['handleResponse'][self.cameraDevId]['threadActive'] = False
 
-    def processGetSystemTime(self, responseFromCamera):  # 'getSystemTime' Response handling
+    def processGetSystemTime(self, commandTuple, responseFromCamera):  # 'getSystemTime' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
 # 2017-05-03 17:03:43.563 DEBUG           Plugin.DebugReceive.run                       <CGI_Result>
@@ -154,15 +155,15 @@ class ThreadResponseFromCamera(threading.Thread):
 
 
 
-    def processGetMotionDetectConfig(self, responseFromCamera):  # 'motionAlarmGet' Response handling
-        self.processGetMotionDetectConfig1(responseFromCamera)
+    def processGetMotionDetectConfig(self, commandTuple, responseFromCamera):  # 'motionAlarmGet' Response handling
+        self.processGetMotionDetectConfig1(commandTuple, responseFromCamera)
 
-    def processGetMotionDetectConfig1(self, responseFromCamera):  # 'motionAlarmGet' Response handling
+    def processGetMotionDetectConfig1(self, commandTuple, responseFromCamera):  # 'motionAlarmGet' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
-            keyValueList = []
-            self.globals['cameras'][self.cameraDevId]['savedConfigDict'] = {}
+            keyValueList = []                   # Initialise list of Key Values for Camera Indigo device update of 'linkage' and 'isEnable'
+            responseGetMotionDetectConfigDict = {}  # Initialise the dictionary to store the GetMotionDetectConfig reponse from camera
             tree = ET.ElementTree(ET.fromstring(responseFromCamera))
             root = tree.getroot()
             for child_of_root in root:
@@ -172,48 +173,102 @@ class ThreadResponseFromCamera(threading.Thread):
                         keyValue = {}
                         keyValue['key'] = child_of_root.tag
                         keyValue['value'] = child_of_root.text
-                        keyValueList.append(keyValue)
+                        keyValueList.append(keyValue)  # for state update
                     else:
-                        self.globals['cameras'][self.cameraDevId]['savedConfigDict'][child_of_root.tag] = child_of_root.text
-            self.cameraDev.updateStatesOnServer(keyValueList)
+                        responseGetMotionDetectConfigDict[child_of_root.tag] = child_of_root.text  # store GetMotionDetectConfig element 
+            self.cameraDev.updateStatesOnServer(keyValueList)  # Update linkage and isEnable states in Indigo camera device
 
-            linkage = int(self.cameraDev.states["linkage"])
-            self.globals['cameras'][self.cameraDevId]['motion']['ringEnabled'] = bool(linkage & 1)  # bit 0
-            self.globals['cameras'][self.cameraDevId]['motion']['snapEnabled'] = bool(linkage & 4)  # bit 2 
+            if len(commandTuple) != 3:  # if setMotionDetectConfig not required - return
+                return 
+
+            # At this point the real request is for a setMotionDetectConfig - the getMotionDetectConfig was done to ensure u-to-date values will be processed
+            commandFunction = commandTuple[1]
+            commandOption =  commandTuple[2]
+
+            executeSetMotionDetectConfig = False
+
+            if commandFunction == kEnableMotionDetect:
+                isEnable = int(self.cameraDev.states['isEnable'])
+                if commandOption == kOn:
+                    isEnable = int(1)
+                elif commandOption == kOff:    
+                    isEnable = int(0)
+                elif commandOption == kToggle:
+                    isEnable = isEnable ^ 1 # Toggle bit 0
+                else:
+                    self.messageHandlingDebugLogger.error(u"Invalid EnableMotionDetect Command Option for '%s': '%s'" % (self.cameraDev.name, commandOption))   
+                    return 
+                linkage = int(self.cameraDev.states["linkage"])
+                executeSetMotionDetectConfig = True
+
+            elif commandFunction == kSnapPicture:
+                linkage = int(self.cameraDev.states["linkage"])
+                if commandOption == kOn:
+                    linkage = linkage | 4  # Turn ON bit 2
+                elif commandOption == kOff:    
+                    linkage = linkage & ~4  # Turn OFF bit 2
+                elif commandOption == kToggle:
+                    linkage = linkage ^ 4 # Toggle bit 2
+                else:
+                    self.messageHandlingDebugLogger.error(u"Invalid Snap Command Option for '%s': '%s'" % (self.cameraDev.name, commandOption))   
+                    return 
+                isEnable = int(self.cameraDev.states['isEnable'])
+                executeSetMotionDetectConfig = True
+
+            elif commandFunction == kRing:
+                linkage = int(self.cameraDev.states["linkage"])
+                if commandOption == kOn:
+                    linkage = linkage | 1  # Turn ON bit 0
+                elif commandOption == kOff:    
+                    linkage = linkage & ~1  # Turn OFF bit 0
+                elif commandOption == kToggle:
+                    linkage = linkage ^ 1 # Toggle bit 0
+                else:
+                    self.messageHandlingDebugLogger.error(u"Invalid Ring Command Option for '%s': '%s'" % (self.cameraDev.name, commandOption))   
+                    return 
+                isEnable = int(self.cameraDev.states['isEnable'])
+                executeSetMotionDetectConfig = True
+
+            if executeSetMotionDetectConfig:
+                dynamicParams = {
+                    'isEnable': str(isEnable),
+                    'linkage': str(linkage),
+                }
+
+                params = dynamicParams.copy()
+                params.update(responseGetMotionDetectConfigDict)
+
+                self.messageHandlingDebugLogger.debug(u'SET MOTION DETECT CONFIG for %s : %s' % (self.cameraDev, params))
+
+                self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('setMotionDetectConfig',), params])
 
         except StandardError, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             self.messageHandlingDebugLogger.error(u"StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))   
 
 
-    def processSetMotionDetectConfig(self, responseFromCamera):  # 'motionAlarmEnable' / 'motionAlarmDisable' Response handling
-        self.processSetMotionDetectConfig1(responseFromCamera)
+    def processSetMotionDetectConfig(self, commandTuple, responseFromCamera):  # 'motionAlarmEnable' / 'motionAlarmDisable' Response handling
+        self.processSetMotionDetectConfig1(commandTuple, responseFromCamera)
 
-    def processSetMotionDetectConfig1(self, responseFromCamera):  # 'motionAlarmEnable' / 'motionAlarmDisable' Response handling
+    def processSetMotionDetectConfig1(self, commandTuple, responseFromCamera):  # 'motionAlarmEnable' / 'motionAlarmDisable' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
             params = {}
-            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', 'getDevState', params])  # Refresh state
+            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getDevState',), params])  # Refresh state
 
             params = {}
-            # Determine Camera platform and process accordingly
-            if self.globals['cameras'][self.cameraDevId]['cameraPlatform'] == kOriginal:
-                self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', 'getMotionDetectConfig', params])
-            else:
-                # kAmba
-                self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', 'getMotionDetectConfig1', params])
-
+            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getMotionDetectConfig',), params])
 
         except StandardError, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             self.messageHandlingDebugLogger.error(u"processSetMotionDetectConfig: StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))   
 
 
-    def processGetDevName(self, responseFromCamera):  # 'getDevName' Response handling
+    def processGetDevName(self, commandTuple, responseFromCamera):  # 'getDevName' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-    def processGetProductModel(self, responseFromCamera):  # 'getProductModel' Response handling
+    def processGetProductModel(self, commandTuple, responseFromCamera):  # 'getProductModel' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
@@ -234,7 +289,7 @@ class ThreadResponseFromCamera(threading.Thread):
             self.messageHandlingDebugLogger.error(u"StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))
 
 
-    def processGetProductModelName(self, responseFromCamera):  # 'getProductModelName' Response handling
+    def processGetProductModelName(self, commandTuple, responseFromCamera):  # 'getProductModelName' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
@@ -262,7 +317,7 @@ class ThreadResponseFromCamera(threading.Thread):
             self.messageHandlingDebugLogger.error(u"StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))   
 
 
-    def processGetDevInfo(self, responseFromCamera):  # 'getDevInfo' Response handling
+    def processGetDevInfo(self, commandTuple, responseFromCamera):  # 'getDevInfo' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
@@ -289,7 +344,7 @@ class ThreadResponseFromCamera(threading.Thread):
 
 
 
-    def processGetDevState(self, responseFromCamera):  # 'getDevState' Response handling
+    def processGetDevState(self, commandTuple, responseFromCamera):  # 'getDevState' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
@@ -305,38 +360,36 @@ class ThreadResponseFromCamera(threading.Thread):
                     keyValueList.append(keyValue)
             self.cameraDev.updateStatesOnServer(keyValueList)
 
-            motionDetectAlarm = self.cameraDev.states['motionDetectAlarm']
+            # motionDetectAlarm:   0 = Motion Detection Disabled
+            #                      1 = Motion Detection Enabled - No motion detected
+            #                      2 = Motion Detection Enabled - Motion detected
+            motionDetectAlarm  = int(self.cameraDev.states['motionDetectAlarm'])
 
-            # set whether alarm is disabled or enabled and whether detected
-            motionDetectionEnabled = False
-            motionDetected = False
+            snap_enabled  = bool((int(self.cameraDev.states['linkage']) & 4) >> 2)
+
             if motionDetectAlarm == '0':  # 0 = Disabled
                 pass
             else:
-                motionDetectionEnabled = True
-                if motionDetectAlarm == '2':  # 2 = Detect Alarm
-                    motionDetected = True
-                    if (self.globals['cameras'][self.cameraDevId]['enableFTP'] and 
-                        self.globals['cameras'][self.cameraDevId]['motion']['snapEnabled']):
+                if motionDetectAlarm == '2':  # Motion Detection Enabled and motion detected
+                    if self.globals['cameras'][self.cameraDevId]['enableFTP'] and snap_enabled:
                         # Only retrieve FTP files if FTP enabled and Snap Enabled
-                        self.processFtpRetrieve()
-                else:  # 1 = No Alarm
+                        self._ftpRetrieve()
+                else:  # Motion Detection Enabled an no motion detected
                     if (self.globals['cameras'][self.cameraDevId]['enableFTP'] and 
-                        self.globals['cameras'][self.cameraDevId]['motion']['snapEnabled'] and 
-                        self.globals['cameras'][self.cameraDevId]['motion']['detected']):
+                        snap_enabled and 
+                        self.globals['cameras'][self.cameraDevId]['motion']['previouslyDetected']):
                         # Only retrieve FTP files if FTP enabled and if Snap Enabled and motion previously detected
-                        self.processFtpRetrieve()  # To pick up any files since motion detection ended
+                        self._ftpRetrieve()  # To pick up any files since motion detection ended
 
-            self.globals['cameras'][self.cameraDevId]['motion']['detectionEnabled'] = motionDetectionEnabled
-            self.globals['cameras'][self.cameraDevId]['motion']['detected'] = motionDetected
-            self.messageHandlingDebugLogger.debug(u"%s [%s] Motion Detected: '%s'" % (self.cameraName, self.cameraAddress, str(motionDetected)))
+            self.globals['cameras'][self.cameraDevId]['motion']['previouslyDetected'] = bool(motionDetectAlarm >> 1)  # Only True if value was 2
+            self.messageHandlingDebugLogger.debug(u"%s [%s] Motion Detect Alarm value: '%s'" % (self.cameraName, self.cameraAddress, str(motionDetectAlarm)))
 
 
             stateImageSel = indigo.kStateImageSel.SensorOff
             uiState = 'off'
-            if motionDetectionEnabled:
-                if motionDetected:
-                    # Set timer to turn off motion detected (allows for user soecified timing of how long motion should indicate motion detected for)
+            if motionDetectAlarm != 0:  # 0 = Motion Detection Disabled
+                if motionDetectAlarm == 2:  # Motion Detection Enabled - Motion detected
+                    # Set timer to turn off motion detected (allows for user specified timing of how long motion should indicate motion detected for)
                     if self.cameraDevId in self.globals['threads']['motionTimer']:
                         self.globals['threads']['motionTimer'][self.cameraDevId].cancel()
                     motionTimerSeconds = self.globals['cameras'][self.cameraDevId]['motion']['detectionInterval']
@@ -346,6 +399,7 @@ class ThreadResponseFromCamera(threading.Thread):
                     stateImageSel = indigo.kStateImageSel.MotionSensorTripped
                     uiState = 'tripped'
                 else:
+                    # motionDetectAlarm = 1 = Motion Detection Enabled - No motion detected
                     if self.globals['cameras'][self.cameraDevId]['motion']['timerActive']:
                         stateImageSel = indigo.kStateImageSel.MotionSensorTripped
                         uiState = 'tripped'
@@ -364,11 +418,11 @@ class ThreadResponseFromCamera(threading.Thread):
             keyValueList.append(keyValue)
             keyValue = {}
             keyValue['key'] = 'motionDetectionEnabled'
-            keyValue['value'] = motionDetectionEnabled
+            keyValue['value'] = bool(motionDetectAlarm & 3)  # True if motionDetectAlarm = 1 or 2
             keyValueList.append(keyValue)
             keyValue = {}
             keyValue['key'] = 'motionDetected'
-            keyValue['value'] = motionDetected
+            keyValue['value'] = bool(motionDetectAlarm & 2)  # True if motionDetectAlarm = 2
             keyValueList.append(keyValue)
             self.cameraDev.updateStatesOnServer(keyValueList)
 
@@ -388,7 +442,7 @@ class ThreadResponseFromCamera(threading.Thread):
             self.messageHandlingDebugLogger.debug(u"handleTimerQueuedStatusCommand: %s - Timer ignored as motion detected already off" % (cameraDev.name))   
 
 
-    def processFtpRetrieve(self):
+    def _ftpRetrieve(self):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
@@ -424,11 +478,10 @@ class ThreadResponseFromCamera(threading.Thread):
                 alarmFtpImageFolder = str('%s%s00' % (alarmTime.strftime('%Y%m%d-%H'), derivedBaseHalfHour))  # e.g. 20150415-143000
                 alarmFoldersToProcess[:0] = [[alarmFtpDateFolder, alarmFtpImageFolder]]  # Prepend to list
 
-
             alarmSaveRootFolder = self.globals['cameras'][self.cameraDevId]['rootFolder']
             ftpCameraFolder = str('%s_%s' % (self.cameraDev.states["productName"].split("+")[0], self.cameraDev.states["mac"]))  # truncate productName on '+' e.g. 'FI9831W_A1B2C3D4E5F6' (productName_mac)
             self.globals['cameras'][self.cameraDevId]['ftpCameraFolder'] = ftpCameraFolder
-            if self.globals['cameras'][self.cameraDevId]['rootFolder'] == '':
+            if self.globals['cameras'][self.cameraDevId]['cameraFolder'] == '':
                 alarmSaveFolderCamera = ftpCameraFolder
             else:
                 alarmSaveFolderCamera = self.globals['cameras'][self.cameraDevId]['cameraFolder']
@@ -534,10 +587,10 @@ class ThreadResponseFromCamera(threading.Thread):
 
         except StandardError, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
-            self.messageHandlingDebugLogger.error(u"processFtpRetrieve: StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))
+            self.messageHandlingDebugLogger.error(u"_ftpRetrieve: StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))
 
 
-    def processSnapPicture2(self, responseFromCamera):  # 'snapPicture2' Response handling
+    def processSnapPicture2(self, commandTuple, responseFromCamera):  # 'snapPicture2' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         self.generalLogger.info(u"SNAP IMAGE PROCESSING NOT YET AVAILABLE!")
