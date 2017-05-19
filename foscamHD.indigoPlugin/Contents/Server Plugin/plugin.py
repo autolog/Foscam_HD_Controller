@@ -732,3 +732,12 @@ class Plugin(indigo.PluginBase):
 
         params = {}
         self.globals['queues']['commandToSend'][dev.id].put(['camera', ('snapPicture2',), params])
+
+    def synchroniseCameraTime(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getSystemTime',), params])
+

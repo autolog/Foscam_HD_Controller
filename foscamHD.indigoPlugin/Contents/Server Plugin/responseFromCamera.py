@@ -19,7 +19,7 @@ import Queue
 import subprocess
 import sys
 import threading
-from time import sleep
+import time
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -60,7 +60,7 @@ class ThreadResponseFromCamera(threading.Thread):
         try:
             self.methodTracer.threaddebug(u"ThreadResponseFromCamera")  
 
-            sleep(kDelayStartResponseFromcamera)  # Allow devices to start?
+            time.sleep(kDelayStartResponseFromcamera)  # Allow devices to start?
 
             self.messageHandlingDebugLogger.debug(u"'ResponseFromCamera' Thread for %s [%s] initialised and now running" % (self.cameraName, self.cameraAddress))  
 
@@ -114,46 +114,67 @@ class ThreadResponseFromCamera(threading.Thread):
     def processGetSystemTime(self, commandTuple, responseFromCamera):  # 'getSystemTime' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-# 2017-05-03 17:03:43.563 DEBUG           Plugin.DebugReceive.run                       <CGI_Result>
-#     <result>0</result>
-#     <timeSource>0</timeSource>
-#     <ntpServer>time.euro.apple.com</ntpServer>
-#     <dateFormat>0</dateFormat>
-#     <timeFormat>1</timeFormat>
-#     <timeZone>-3600</timeZone>
-#     <isDst>1</isDst>
-#     <dst>0</dst>
-#     <year>2017</year>
-#     <mon>5</mon>
-#     <day>3</day>
-#     <hour>17</hour>
-#     <minute>3</minute>
-#     <sec>43</sec>
-# </CGI_Result>
-
-
-
-
-
-
         try:
-            keyValueList = []
+            dynamicParams = {}  # Initialise the dictionary to store the GetSystemTime reponse from camera that will be used for SetSystemTime
             tree = ET.ElementTree(ET.fromstring(responseFromCamera))
             root = tree.getroot()
             for child_of_root in root:
                 self.messageHandlingDebugLogger.debug(u"XML: '%s' = %s" % (child_of_root.tag, child_of_root.text))
                 if child_of_root.tag != 'result':
-                    keyValue = {}
-                    keyValue['key'] = child_of_root.tag
-                    keyValue['value'] = child_of_root.text
-                    keyValueList.append(keyValue)
-            self.cameraDev.updateStatesOnServer(keyValueList)
+                    if child_of_root.tag in ('ntpServer', 'dateFormat', 'timeFormat'):
+                        dynamicParams[child_of_root.tag] = child_of_root.text  # store GetMotionDetectConfig element from original value
+
+            indigoDateTime = datetime.datetime.utcnow()
+            indigoDateTimeRAW = indigoDateTime.strftime("%Y%m%d%H%M%S")
+            indigoDateTimeYear   = indigoDateTimeRAW[0:4] 
+            indigoDateTimeMon    = indigoDateTimeRAW[4:6] 
+            indigoDateTimeDay    = indigoDateTimeRAW[6:8] 
+            indigoDateTimeHour   = indigoDateTimeRAW[8:10] 
+            indigoDateTimeMinute = indigoDateTimeRAW[10:12] 
+            indigoDateTimeSec    = indigoDateTimeRAW[12:14] 
+                   
+            dynamicParams['isDst']      = '0'
+            dynamicParams['dst']        = '0'
+            dynamicParams['year']       = indigoDateTimeYear
+            dynamicParams['mon']        = indigoDateTimeMon.lstrip('0')
+            dynamicParams['day']        = indigoDateTimeDay.lstrip('0')
+            dynamicParams['hour']       = indigoDateTimeHour.lstrip('0')
+            dynamicParams['minute']     = indigoDateTimeMinute.lstrip('0')
+            dynamicParams['sec']        = indigoDateTimeSec.lstrip('0')
+            timeZone                    = time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
+            dynamicParams['timeZone']   = str(timeZone)
+            dynamicParams['timeSource'] = '1'  # Set Time Manually
+
+            timezoneUi = '{0:+d}'.format((timeZone / 3600) * -1)
+
+            if ('dateFormat' in dynamicParams) and (dynamicParams['dateFormat'] == '2'):
+                dateTimeUi = indigoDateTime.strftime("%m/%d/%Y")
+            elif ('dateFormat' in dynamicParams) and (dynamicParams['dateFormat'] == '1'):
+                dateTimeUi = indigoDateTime.strftime("%d/%m/%Y")
+            else:  # Assume present and = '0'
+                dateTimeUi = indigoDateTime.strftime("%Y-%m-%d")
+
+            if ('timeFormat' in dynamicParams) and (dynamicParams['timeFormat'] == '0'):
+                dateTimeUi = dateTimeUi + indigoDateTime.strftime(" %H:%M:%S %p")
+            else:  # Assume present and = '1'
+                dateTimeUi = dateTimeUi + indigoDateTime.strftime(" %H:%M:%S")
+
+            indigo.server.log("'%s' camera time synchronised to '%s UTC %s'" %(self.cameraDev.name, dateTimeUi, timezoneUi))
+
+            params = dynamicParams
+
+            self.messageHandlingDebugLogger.debug(u'SET SYSTEM TIME for %s : %s' % (self.cameraDev, params))
+
+            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('setSystemTime',), params])
+
         except StandardError, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             self.messageHandlingDebugLogger.error(u"StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))
 
+    def processSetSystemTime(self, commandTuple, responseFromCamera):  # 'setSystemTime' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-
+        pass
 
     def processGetMotionDetectConfig(self, commandTuple, responseFromCamera):  # 'motionAlarmGet' Response handling
         self.processGetMotionDetectConfig1(commandTuple, responseFromCamera)
@@ -356,7 +377,18 @@ class ThreadResponseFromCamera(threading.Thread):
                 if child_of_root.tag != 'result':
                     keyValue = {}
                     keyValue['key'] = child_of_root.tag
-                    keyValue['value'] = child_of_root.text
+                    # Next bit of logic stores SD space values as a numeric so it can be compared in trigger conditions
+                    if (child_of_root.tag in ('sdFreeSpace', 'sdTotalSpace')):
+                        spaceValue = child_of_root.text
+                        if child_of_root.text[-1:] == 'k':
+                            spaceValue = child_of_root.text[:-1]  # Remove trailing 'k'
+                        try:
+                            int(spaceValue) + 1  # Numeric Test
+                        except ValueError:
+                            spaceValue = 0  # Default to zero if no trailing k or invalid numeric
+                        keyValue['value'] = spaceValue
+                    else:
+                        keyValue['value'] = child_of_root.text
                     keyValueList.append(keyValue)
             self.cameraDev.updateStatesOnServer(keyValueList)
 

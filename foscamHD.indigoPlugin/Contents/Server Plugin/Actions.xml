@@ -55,6 +55,10 @@
         <CallbackMethod>updateCameraStatus</CallbackMethod>
     </Action>
 
+    <Action id="syncCameraTime" deviceFilter="self">
+        <Name>Synchronise Camera Time</Name>
+        <CallbackMethod>synchroniseCameraTime</CallbackMethod>
+    </Action>
     <!--- TO BE IMPLEMENTED 
 
     <Action id="setInfraLedMode" deviceFilter="self">

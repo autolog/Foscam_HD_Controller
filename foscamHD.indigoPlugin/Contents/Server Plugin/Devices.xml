@@ -177,12 +177,12 @@
                 <ControlPageLabel>SD Card State</ControlPageLabel>
             </State>
             <State id="sdFreeSpace">
-                <ValueType>String</ValueType> 
+                <ValueType>Integer</ValueType> 
                 <TriggerLabel>SD Free Space</TriggerLabel>
                 <ControlPageLabel>SD Free Space</ControlPageLabel>
             </State>
             <State id="sdTotalSpace">
-                <ValueType>String</ValueType> 
+                <ValueType>Integer</ValueType> 
                 <TriggerLabel>SD Total Space</TriggerLabel>
                 <ControlPageLabel>SD Total Space</ControlPageLabel>
             </State>
@@ -273,87 +273,6 @@
                 <ControlPageLabel>Model Name</ControlPageLabel>
             </State>
 
-            <!--- State values mapped to 'getSystemTime' coomand -->          
-
-
-            <State id="timeSource">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Source</TriggerLabel>
-                <ControlPageLabel>Camera Time Source</ControlPageLabel>
-            </State>
-
-            <State id="ntpServer">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera NTP Server</TriggerLabel>
-                <ControlPageLabel>Camera NTP Server</ControlPageLabel>
-            </State>
-
-            <State id="dateFormat">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Date Format</TriggerLabel>
-                <ControlPageLabel>Camera Date Format</ControlPageLabel>
-            </State>
-
-            <State id="timeFormat">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Format</TriggerLabel>
-                <ControlPageLabel>Camera Time Format</ControlPageLabel>
-            </State>
-
-            <State id="timeZone">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Zone</TriggerLabel>
-                <ControlPageLabel>Camera Time Zone</ControlPageLabel>
-            </State>
-
-            <State id="isDst">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera is DST?</TriggerLabel>
-                <ControlPageLabel>Camera is DST?</ControlPageLabel>
-            </State>
-
-            <State id="dst">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera DST - Not Used</TriggerLabel>
-                <ControlPageLabel>Camera DST - Not Used</ControlPageLabel>
-            </State>
-
-            <State id="year">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Year</TriggerLabel>
-                <ControlPageLabel>Camera Time Year</ControlPageLabel>
-            </State>
-
-            <State id="mon">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Month</TriggerLabel>
-                <ControlPageLabel>Camera Time Month</ControlPageLabel>
-            </State>
-
-            <State id="day">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Day</TriggerLabel>
-                <ControlPageLabel>Camera Time Day</ControlPageLabel>
-            </State>
-
-            <State id="hour">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Hour</TriggerLabel>
-                <ControlPageLabel>Camera Time Hour</ControlPageLabel>
-            </State>
-
-            <State id="minute">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Minute</TriggerLabel>
-                <ControlPageLabel>Camera Time Minute</ControlPageLabel>
-            </State>
-
-            <State id="sec">
-                <ValueType>String</ValueType> 
-                <TriggerLabel>Camera Time Second</TriggerLabel>
-                <ControlPageLabel>Camera Time Second</ControlPageLabel>
-            </State>
-
             <!--- State values managed by plugin for motion detection -->           
             <State id="motionDetectionEnabled">
                 <ValueType>Boolean</ValueType> 
@@ -366,10 +285,6 @@
                 <ControlPageLabel>Motion Detected</ControlPageLabel>
             </State>
         </States>
-
-
-
-
 
         <UiDisplayStateId>status</UiDisplayStateId>     
     </Device>
