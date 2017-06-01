@@ -45,32 +45,30 @@
             <Field id="separator-1" type="separator" alwaysUseInDialogHeightCalc="true"/>
             <Field type="checkbox" id="enableFTP" defaultValue="true" tooltip="Tick to Enable FTP" alwaysUseInDialogHeightCalc="true">
                 <Label>Enable FTP:</Label>
-                <Description>Enable FTP snap image retrieval.</Description>
+                <Description>Enable snap image retrieval from camera's FTP Server.</Description>
             </Field>
             <Field id="ftpPort" type="textfield" default="50021" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
                 <Label>Camera FTP Port:</Label>
                 <Description>Enter the FTP port of your camera</Description>
             </Field>
 
-            <Field id="ftpCameraFolder" type="textfield"  default=""  readonly="YES" alwaysUseInDialogHeightCalc="true">
+            <Field id="ftpCameraFolder" type="textfield"  default=""  readonly="YES" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
                 <Label>FTP folder name:</Label>
                 <Description>FTP folder name.</Description>
             </Field>
-            <Field id="help-1" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
+            <Field id="help-2" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
                 <Label>The FTP folder name is filled in after the first FTP retrieval - this is for information only. If the 'Camera Folder for FTP file save' (see below) is left empty, then the 'FTP folder name' will be used.</Label>
             </Field>
 
-            <Field id="rootFolder" type="textfield"  default="~/Documents" alwaysUseInDialogHeightCalc="true">
+            <Field id="rootFolder" type="textfield"  default="~/Documents" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
                 <Label>Root Folder for FTP file save:</Label>
                 <Description>root folder for FTP file save.</Description>
             </Field>
 
-            <Field id="cameraFolder" type="textfield"  default="" alwaysUseInDialogHeightCalc="true">
+            <Field id="cameraFolder" type="textfield"  default="" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
                 <Label>Camera Folder for FTP file save:</Label>
                 <Description>Camera folder for FTP file save.</Description>
             </Field>
-
-
 
             <Field type="checkbox" id="enableAutoTimeSync" defaultValue="true" tooltip="Tick to enable synchronisation of camera time to Indigo time" alwaysUseInDialogHeightCalc="true">
                 <Label>Enable Auto Time Sync:</Label>
@@ -79,14 +77,14 @@
 
             <Field id="separator-2" type="separator" alwaysUseInDialogHeightCalc="true"/>
 
-            <Field id="cameraPlatform" type="menu" defaultValue="0" enabledBindingId="statusPolling" tooltip="Select polling interval" alwaysUseInDialogHeightCalc="true">
+            <Field id="cameraPlatform" type="menu" defaultValue="0" tooltip="Select polling interval" alwaysUseInDialogHeightCalc="true">
                 <Label>Camera platform:</Label>
                 <List>
                     <Option value="0">Original</Option>
                     <Option value="1">Amba</Option>
                 </List>
             </Field>
-            <Field id="help-2" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
+            <Field id="help-3" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
                 <Label>Select the camera software platform. Newer cameras are likely to be using the Amba platform.</Label>
             </Field>
             <Field id="separator-3" type="separator" alwaysUseInDialogHeightCalc="true"/>
@@ -94,13 +92,13 @@
                 <Label>Dynamic Views:</Label>
                 <List class="indigo.devices" filter="com.autologplugin.indigoplugin.dynamicviewcontroller.dynamicView"/>
             </Field>
-            <Field id="help-3" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
+            <Field id="help-4" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
                 <Label>Select a dynamic view to be broadcast to if you want to be able to dynamically view the captured images from the camera and keep the dynamic view up-to-date (Use the Dynamic View Controller plugin to set-up a dynamic view device).</Label>
             </Field>
 
             <Field id="separator-4" type="separator" alwaysUseInDialogHeightCalc="true"/>  
 
-            <Field id="help-4" type="label" alwaysUseInDialogHeightCalc="true">
+            <Field id="help-5" type="label" alwaysUseInDialogHeightCalc="true">
                 <Label>Use status polling to update the state of the camera periodically.</Label>
             </Field>
             <Field type="checkbox" id="statusPolling" defaultValue="true" tooltip="Tick to turn on Camera polling" alwaysUseInDialogHeightCalc="true">
@@ -126,7 +124,7 @@
                 <Label>Detection Interval (seconds):</Label>
                 <Description>How long active for in seconds.</Description>
             </Field>
-            <Field id="help-5" type="label"  fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
+            <Field id="help-6" type="label"  fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
                 <Label>Specify how long the sensor should indicate "motion detected" for before it goes off. Note that this is independant of the camera but should be greater than 15 seconds (the maximum allowed to be specified in the camera set-up).</Label>
             </Field>
 
@@ -139,15 +137,22 @@
             </State>
 
             <!---State values mapped to 'getMotionDetectConfig' command -->         
-            <State id="isEnable">
+            <State id="motionDetectionIsEnabled">
                 <ValueType>String</ValueType> 
-                <TriggerLabel>isEnable</TriggerLabel>
-                <ControlPageLabel>isEnable</ControlPageLabel>
+                <TriggerLabel>Motion Detection Is Enabled</TriggerLabel>
+                <ControlPageLabel>Motion Detection Is Enabled</ControlPageLabel>
             </State>
             <State id="linkage">
                 <ValueType>String</ValueType> 
                 <TriggerLabel>linkage</TriggerLabel>
                 <ControlPageLabel>linkage</ControlPageLabel>
+            </State>
+
+            <!---State values mapped to 'getScheduleRecordConfig' command -->         
+            <State id="scheduleRecordEnabled">
+                <ValueType>String</ValueType> 
+                <TriggerLabel>Schedule Record Is Enabled</TriggerLabel>
+                <ControlPageLabel>Schedule Record Is Enabled</ControlPageLabel>
             </State>
 
             <!---State values mapped to 'getDevState' coomand -->           

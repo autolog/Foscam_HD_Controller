@@ -1,23 +1,23 @@
 <?xml version="1.0"?>
 <Actions>
-    <Action id="alarmGet" deviceFilter="self">
-        <Name>Get Motion Alarm Status</Name>
-        <CallbackMethod>motionAlarmGet</CallbackMethod>
+    <Action id="motionDetectionGet" deviceFilter="self">
+        <Name>Get Motion Detection Status</Name>
+        <CallbackMethod>motionDetectionGet</CallbackMethod>
     </Action>
 
-    <Action id="motionAlarmEnable" deviceFilter="self">
-        <Name>Enable Motion Alarm</Name>
-        <CallbackMethod>motionAlarmEnable</CallbackMethod>
+    <Action id="motionDetectionOn" deviceFilter="self">
+        <Name>Motion Detection On</Name>
+        <CallbackMethod>motionDetectionOn</CallbackMethod>
     </Action>
 
-    <Action id="motionAlarmDisable" deviceFilter="self">
-        <Name>Disable Motion Alarm</Name>
-        <CallbackMethod>motionAlarmDisable</CallbackMethod>
+    <Action id="motionDetectionOff" deviceFilter="self">
+        <Name>Motion Detection Off</Name>
+        <CallbackMethod>motionDetectionOff</CallbackMethod>
     </Action>
 
-    <Action id="motionAlarmToggle" deviceFilter="self">
-        <Name>Toggle Motion Alarm</Name>
-        <CallbackMethod>motionAlarmToggle</CallbackMethod>
+    <Action id="motionDetectionToggle" deviceFilter="self">
+        <Name>Motion Detection Toggle</Name>
+        <CallbackMethod>motionDetectionToggle</CallbackMethod>
     </Action>
 
     <Action id="ringOn" deviceFilter="self">
@@ -50,6 +50,36 @@
         <CallbackMethod>snapToggle</CallbackMethod>
     </Action>
     
+    <Action id="motionDetectionRecordOn" deviceFilter="self">
+        <Name>Motion Detection Record On</Name>
+        <CallbackMethod>motionDetectionRecordOn</CallbackMethod>
+    </Action>
+    
+    <Action id="motionDetectionRecordOff" deviceFilter="self">
+        <Name>Motion Detection Record Off</Name>
+        <CallbackMethod>motionDetectionRecordOff</CallbackMethod>
+    </Action>
+    
+    <Action id="motionDetectionRecordToggle" deviceFilter="self">
+        <Name>Motion Detection Record Toggle</Name>
+        <CallbackMethod>motionDetectionRecordToggle</CallbackMethod>
+    </Action>
+    
+    <Action id="scheduleRecordOn" deviceFilter="self">
+        <Name>Schedule Record On</Name>
+        <CallbackMethod>scheduleRecordOn</CallbackMethod>
+    </Action>
+    
+    <Action id="scheduleRecordOff" deviceFilter="self">
+        <Name>Schedule  Record Off</Name>
+        <CallbackMethod>scheduleRecordOff</CallbackMethod>
+    </Action>
+    
+    <Action id="scheduleRecordToggle" deviceFilter="self">
+        <Name>Schedule  Record Toggle</Name>
+        <CallbackMethod>scheduleRecordToggle</CallbackMethod>
+    </Action>
+    
     <Action id="updateCameraStatus" deviceFilter="self">
         <Name>Update Camera Status</Name>
         <CallbackMethod>updateCameraStatus</CallbackMethod>
@@ -59,6 +89,18 @@
         <Name>Synchronise Camera Time</Name>
         <CallbackMethod>synchroniseCameraTime</CallbackMethod>
     </Action>
+
+    <!--- EXPERIMENTAL
+
+    <Action id="experimental" deviceFilter="self">
+        <Name>Experimental</Name>
+        <CallbackMethod>experimental</CallbackMethod>
+    </Action>
+     <Action id="experimental1" deviceFilter="self">
+        <Name>Experimental 1</Name>
+        <CallbackMethod>experimental1</CallbackMethod>
+    </Action>
+ -->
     <!--- TO BE IMPLEMENTED 
 
     <Action id="setInfraLedMode" deviceFilter="self">

@@ -111,6 +111,26 @@ class ThreadResponseFromCamera(threading.Thread):
 
         self.globals['threads']['handleResponse'][self.cameraDevId]['threadActive'] = False
 
+    def processGetRecordList(self, commandTuple, responseFromCamera):  # 'getRecordList' Response handling
+        self.processGetRecordList1(commandTuple, responseFromCamera)
+
+
+    def processGetRecordList1(self, commandTuple, responseFromCamera):  # 'getRecordList1' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+
+        pass
+
+    def processStartRecord(self, commandTuple, responseFromCamera):  # 'getRecordList1' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+
+        pass
+
+    def processStopRecord(self, commandTuple, responseFromCamera):  # 'getRecordList1' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+
+        pass
+
+
     def processGetSystemTime(self, commandTuple, responseFromCamera):  # 'getSystemTime' Response handling
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
@@ -190,9 +210,14 @@ class ThreadResponseFromCamera(threading.Thread):
             for child_of_root in root:
                 self.messageHandlingDebugLogger.debug(u"XML: '%s' = %s" % (child_of_root.tag, child_of_root.text))
                 if child_of_root.tag != 'result':
-                    if (child_of_root.tag == 'linkage') or (child_of_root.tag == 'isEnable'):
+                    if child_of_root.tag == 'linkage':
                         keyValue = {}
                         keyValue['key'] = child_of_root.tag
+                        keyValue['value'] = child_of_root.text
+                        keyValueList.append(keyValue)  # for state update
+                    elif child_of_root.tag == 'isEnable':
+                        keyValue = {}
+                        keyValue['key'] = 'motionDetectionIsEnabled'
                         keyValue['value'] = child_of_root.text
                         keyValueList.append(keyValue)  # for state update
                     else:
@@ -209,13 +234,13 @@ class ThreadResponseFromCamera(threading.Thread):
             executeSetMotionDetectConfig = False
 
             if commandFunction == kEnableMotionDetect:
-                isEnable = int(self.cameraDev.states['isEnable'])
+                motionDetectionIsEnabled = int(self.cameraDev.states['motionDetectionIsEnabled'])
                 if commandOption == kOn:
-                    isEnable = int(1)
+                    motionDetectionIsEnabled = int(1)
                 elif commandOption == kOff:    
-                    isEnable = int(0)
+                    motionDetectionIsEnabled = int(0)
                 elif commandOption == kToggle:
-                    isEnable = isEnable ^ 1 # Toggle bit 0
+                    motionDetectionIsEnabled = motionDetectionIsEnabled ^ 1 # Toggle bit 0
                 else:
                     self.messageHandlingDebugLogger.error(u"Invalid EnableMotionDetect Command Option for '%s': '%s'" % (self.cameraDev.name, commandOption))   
                     return 
@@ -233,7 +258,21 @@ class ThreadResponseFromCamera(threading.Thread):
                 else:
                     self.messageHandlingDebugLogger.error(u"Invalid Snap Command Option for '%s': '%s'" % (self.cameraDev.name, commandOption))   
                     return 
-                isEnable = int(self.cameraDev.states['isEnable'])
+                motionDetectionIsEnabled = int(self.cameraDev.states['motionDetectionIsEnabled'])
+                executeSetMotionDetectConfig = True
+
+            elif commandFunction == kMotionDetectionRecord:
+                linkage = int(self.cameraDev.states["linkage"])
+                if commandOption == kOn:
+                    linkage = linkage | 8  # Turn ON bit 3
+                elif commandOption == kOff:    
+                    linkage = linkage & ~8  # Turn OFF bit 3
+                elif commandOption == kToggle:
+                    linkage = linkage ^ 8 # Toggle bit 3
+                else:
+                    self.messageHandlingDebugLogger.error(u"Invalid Snap Command Option for '%s': '%s'" % (self.cameraDev.name, commandOption))   
+                    return 
+                motionDetectionIsEnabled = int(self.cameraDev.states['motionDetectionIsEnabled'])
                 executeSetMotionDetectConfig = True
 
             elif commandFunction == kRing:
@@ -247,12 +286,12 @@ class ThreadResponseFromCamera(threading.Thread):
                 else:
                     self.messageHandlingDebugLogger.error(u"Invalid Ring Command Option for '%s': '%s'" % (self.cameraDev.name, commandOption))   
                     return 
-                isEnable = int(self.cameraDev.states['isEnable'])
+                motionDetectionIsEnabled = int(self.cameraDev.states['motionDetectionIsEnabled'])
                 executeSetMotionDetectConfig = True
 
             if executeSetMotionDetectConfig:
                 dynamicParams = {
-                    'isEnable': str(isEnable),
+                    'isEnable': str(motionDetectionIsEnabled),
                     'linkage': str(linkage),
                 }
 
@@ -284,6 +323,81 @@ class ThreadResponseFromCamera(threading.Thread):
         except StandardError, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             self.messageHandlingDebugLogger.error(u"processSetMotionDetectConfig: StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))   
+
+
+    def processGetScheduleRecordConfig(self, commandTuple, responseFromCamera):  # 'motionAlarmGet' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+
+        try:
+            keyValueList = []                   # Initialise list of Key Values for Camera Indigo device update of 'linkage' and 'isEnable'
+            responseGetScheduleRecordConfig = {}  # Initialise the dictionary to store the GetMotionDetectConfig reponse from camera
+            tree = ET.ElementTree(ET.fromstring(responseFromCamera))
+            root = tree.getroot()
+            for child_of_root in root:
+                self.messageHandlingDebugLogger.debug(u"XML: '%s' = %s" % (child_of_root.tag, child_of_root.text))
+                if child_of_root.tag != 'result':
+                    if child_of_root.tag == 'isEnable':
+                        keyValue = {}
+                        keyValue['key'] = 'scheduleRecordEnabled'
+                        keyValue['value'] = bool(int(child_of_root.text))
+                        keyValueList.append(keyValue)  # for state update
+                    else:
+                        responseGetScheduleRecordConfig[child_of_root.tag] = child_of_root.text  # store GetMotionDetectConfig element 
+            self.cameraDev.updateStatesOnServer(keyValueList)  # Update scheduleRecordIsEnable state in Indigo camera device
+
+            if len(commandTuple) != 3:  # if setScheduleRecordConfig not required - return
+                return 
+
+            # At this point the real request is for a setMotionDetectConfig - the getMotionDetectConfig was done to ensure u-to-date values will be processed
+            commandFunction = commandTuple[1]
+            commandOption =  commandTuple[2]
+
+            executeScheduleRecordConfig = False
+
+            if commandFunction == kScheduleRecord:
+                scheduleRecordEnabled = int(self.cameraDev.states['scheduleRecordEnabled'])
+                if commandOption == kOn:
+                    scheduleRecordEnabled = '1'
+                elif commandOption == kOff:    
+                    scheduleRecordEnabled = '0'
+                elif commandOption == kToggle:
+                    scheduleRecordEnabled = str(scheduleRecordEnabled ^ 1) # Toggle bit 0
+                else:
+                    self.messageHandlingDebugLogger.error(u"Invalid EnableScheduleRecord Command Option for '%s': '%s'" % (self.cameraDev.name, commandOption))   
+                    return 
+                executeStScheduleRecordConfig = True
+
+
+            if executeStScheduleRecordConfig:
+                dynamicParams = {
+                    'isEnable': scheduleRecordEnabled
+                }
+
+                params = dynamicParams.copy()
+                params.update(responseGetScheduleRecordConfig)
+
+                self.messageHandlingDebugLogger.debug(u'SET SCHEDULE RECORD CONFIG for %s : %s' % (self.cameraDev, params))
+
+                self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('setScheduleRecordConfig',), params])
+
+        except StandardError, e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            self.messageHandlingDebugLogger.error(u"processGetScheduleRecordConfig: StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))   
+
+
+    def processSetScheduleRecordConfig(self, commandTuple, responseFromCamera):  # 'motionAlarmEnable' / 'motionAlarmDisable' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+
+        try:
+            params = {}
+            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getDevState',), params])  # Refresh state
+
+            params = {}
+            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getScheduleRecordConfig',), params])
+
+        except StandardError, e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            self.messageHandlingDebugLogger.error(u"processSetScheduleRecordConfig: StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))   
 
 
     def processGetDevName(self, commandTuple, responseFromCamera):  # 'getDevName' Response handling

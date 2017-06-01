@@ -23,6 +23,8 @@ kNotSet = 0
 kEnableMotionDetect = 1
 kRing = 2
 kSnapPicture = 3
+kMotionDetectionRecord = 4
+kScheduleRecord = 5
 
 kOn = 1
 kOff = 2

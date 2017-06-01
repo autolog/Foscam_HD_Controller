@@ -467,6 +467,8 @@ class Plugin(indigo.PluginBase):
 
             self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig',), params])
 
+            self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getScheduleRecordConfig',), params])
+
             self.generalLogger.debug(u"%s Device Start Completed" % (indigo.devices[dev.id].name))
         except StandardError, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -618,17 +620,17 @@ class Plugin(indigo.PluginBase):
 
         ###### TURN ON ######
         if action.sensorAction == indigo.kSensorAction.TurnOn:
-            self.motionAlarmEnable(action, dev)            
+            self.motionDetectionOn(action, dev)            
 
         ###### TURN OFF ######
         elif action.sensorAction == indigo.kSensorAction.TurnOff:
-            self.motionAlarmDisable(action, dev)            
+            self.motionDetectionOff(action, dev)            
 
         ###### REQUEST STATUS ######
         elif  action.sensorAction == indigo.kSensorAction.RequestStatus:
             self.updateCameraStatus(action, dev)            
 
-    def motionAlarmToggle(self, pluginAction, dev):
+    def motionDetectionToggle(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
@@ -636,7 +638,7 @@ class Plugin(indigo.PluginBase):
         params = {}
         self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kEnableMotionDetect, kToggle), params])
 
-    def motionAlarmEnable(self, pluginAction, dev):
+    def motionDetectionOn(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
@@ -645,7 +647,7 @@ class Plugin(indigo.PluginBase):
         self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kEnableMotionDetect, kOn), params])
 
 
-    def motionAlarmDisable(self, pluginAction, dev):
+    def motionDetectionOff(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
@@ -665,7 +667,7 @@ class Plugin(indigo.PluginBase):
         self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getDevState',), params])
         self.generalLogger.info(u'sent "%s" %s' % (dev.name, "request status"))
 
-    def motionAlarmGet(self, pluginAction, dev):
+    def motionDetectionGet(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
         if self.checkCameraEnabled(dev, pluginAction.description) == False: return
@@ -725,6 +727,60 @@ class Plugin(indigo.PluginBase):
         self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kSnapPicture, kOff), params])
 
 
+    def motionDetectionRecordToggle(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kMotionDetectionRecord, kToggle), params])
+
+
+    def motionDetectionRecordOn(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kMotionDetectionRecord, kOn), params])
+
+
+    def motionDetectionRecordOff(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getMotionDetectConfig', kMotionDetectionRecord, kOff), params])
+
+
+    def scheduleRecordToggle(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getScheduleRecordConfig', kScheduleRecord, kToggle), params])
+
+
+    def scheduleRecordOn(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getScheduleRecordConfig', kScheduleRecord, kOn), params])
+
+
+    def scheduleRecordOff(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getScheduleRecordConfig', kScheduleRecord, kOff), params])
+
+
     def snap(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
@@ -741,3 +797,18 @@ class Plugin(indigo.PluginBase):
         params = {}
         self.globals['queues']['commandToSend'][dev.id].put(['camera', ('getSystemTime',), params])
 
+    def experimental(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        pass
+
+    def experimental1(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        pass
