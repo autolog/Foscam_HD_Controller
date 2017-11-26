@@ -206,7 +206,7 @@ class ThreadSendCommand(threading.Thread):
                                     self.receiveDebugLogger.debug(u"Response received from camera: %s [%s] to '%s' =\n%s" % (self.cameraName, self.cameraAddress, command, responseFromCamera))
                                 self.globals['queues']['responseFromCamera'][self.cameraDevId].put([commandTuple, responseFromCamera])
                             else:
-                                self.receiveDebugLogger.error(u"'responseFromCamera' Error %s:%s [%s:%s]" % (str(result), resultUi, str(len(responseFromCamera)), responseFromCamera)) 
+                                self.receiveDebugLogger.error(u"Response received from camera: %s [%s], Error %s:%s [%s:%s]" % (self.cameraName, self.cameraAddress, str(result), resultUi, str(len(responseFromCamera)), responseFromCamera)) 
                               
 
                 except StandardError, e:

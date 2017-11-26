@@ -332,7 +332,7 @@ class Plugin(indigo.PluginBase):
             self.globals['cameras'][dev.id]['password'] = dev.pluginProps['password']
             self.globals['cameras'][dev.id]['ipAddressPort'] = dev.pluginProps['ipaddress'] + ":" + dev.pluginProps['port']
             self.globals['cameras'][dev.id]['ipAddressPortName'] = (self.globals['cameras'][dev.id]['ipAddressPort'].replace('.','-')).replace(':','-')
-            self.globals['cameras'][dev.id]['enableFTP'] = dev.pluginProps.get("enableFTP", True)
+            self.globals['cameras'][dev.id]['ftpProcessMode'] = int(dev.pluginProps.get("ftpProcessMode", 0))
             self.globals['cameras'][dev.id]['ftpPort'] = int(dev.pluginProps.get('ftport', 50021))
             self.globals['cameras'][dev.id]['ftpFolderCamera'] = dev.pluginProps.get('ftpFolderCamera', '')
             self.globals['cameras'][dev.id]['rootFolder'] =  dev.pluginProps.get('rootFolder', '~/Documents')
@@ -479,7 +479,8 @@ class Plugin(indigo.PluginBase):
 
         # Set default values for Edit Device Settings... (ConfigUI)
 
-        pluginProps["enableFTP"] = pluginProps.get("enableFTP", True)
+        pluginProps["ftpProcessMode"] = pluginProps.get("ftpProcessMode", '0')
+
         pluginProps["ftpPort"] = pluginProps.get("ftpPort", '50021')
 
         pluginProps["ftpCameraFolder"] = pluginProps.get("ftpCameraFolder", '')

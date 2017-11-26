@@ -43,39 +43,57 @@
             </Field>
 
             <Field id="separator-1" type="separator" alwaysUseInDialogHeightCalc="true"/>
-            <Field type="checkbox" id="enableFTP" defaultValue="true" tooltip="Tick to Enable FTP" alwaysUseInDialogHeightCalc="true">
-                <Label>Enable FTP:</Label>
-                <Description>Enable snap image retrieval from camera's FTP Server.</Description>
+            <Field type="menu" id="ftpProcessMode" defaultValue="0" tooltip="Tick to Enable FTP" alwaysUseInDialogHeightCalc="true">
+                <Label>FTP processing:</Label>
+                <List>
+                    <Option value="0">No FTP</Option>
+                    <Option value="1">FTP Client mode</Option>
+                    <Option value="2">FTP Server mode</Option>
+                </List>
             </Field>
-            <Field id="ftpPort" type="textfield" default="50021" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+            <Field id="help-1-0" type="label" visibleBindingId="ftpProcessMode" visibleBindingValue="0" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
+                <Label>^ Select 'FTP Client mode' to enable processing to retrieve snap images from the camera's internal FTP Server. Select 'FTP Server mode' to enable processing of snap images FTP'd by the camera to your Apple Mac's FTP Server.</Label>
+            </Field>
+
+            <Field id="help-1-1" type="label" visibleBindingId="ftpProcessMode" visibleBindingValue="1" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
+                <Label>^ Select 'FTP Client mode' to enable processing to retrieve snap images from the camera's internal FTP Server. The plugin will FTP to the camera and retrieve snap images and store them in the folder specified below. The camera should have a SD card and be set to store snap images in the SD card</Label>
+            </Field>
+
+            <Field id="help-1-2" type="label" visibleBindingId="ftpProcessMode" visibleBindingValue="2" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
+                <Label>^ Select 'FTP Server mode' to enable processing of snap images FTP'd by the camera to your Apple Mac's FTP Server. The plugin will monitor motion detection and check the folder specified below for new images that have been FTP'd to the Apple Mac FTP server by the camera. The camera should be set to store snap images to FTP and the FTP credentials for the Apple Mac's FTP server should be setup on the camera.</Label>
+            </Field>
+
+            <Field id="ftpPort" type="textfield" default="50021" visibleBindingId="ftpProcessMode" visibleBindingValue="1" alwaysUseInDialogHeightCalc="true">
                 <Label>Camera FTP Port:</Label>
                 <Description>Enter the FTP port of your camera</Description>
             </Field>
 
-            <Field id="ftpCameraFolder" type="textfield"  default=""  readonly="YES" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+            <Field id="ftpCameraFolder" type="textfield"  default=""  readonly="YES" visibleBindingId="ftpProcessMode" visibleBindingValue="1" alwaysUseInDialogHeightCalc="true">
                 <Label>FTP folder name:</Label>
                 <Description>FTP folder name.</Description>
             </Field>
-            <Field id="help-2" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-                <Label>The FTP folder name is filled in after the first FTP retrieval - this is for information only. If the 'Camera Folder for FTP file save' (see below) is left empty, then the 'FTP folder name' will be used.</Label>
+            <Field id="help-2" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="ftpProcessMode" visibleBindingValue="1" alwaysUseInDialogHeightCalc="true">
+                <Label>^ The FTP folder name is filled in after the first FTP retrieval - this is for information only. If the 'Camera Folder for FTP file save' (see below) is left empty, then the 'FTP folder name' will be used.</Label>
             </Field>
 
-            <Field id="rootFolder" type="textfield"  default="~/Documents" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+            <Field id="rootFolder" type="textfield"  default="~/Documents" visibleBindingId="ftpProcessMode" visibleBindingValue="1" alwaysUseInDialogHeightCalc="true">
                 <Label>Root Folder for FTP file save:</Label>
                 <Description>root folder for FTP file save.</Description>
             </Field>
 
-            <Field id="cameraFolder" type="textfield"  default="" visibleBindingId="enableFTP" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+            <Field id="cameraFolder" type="textfield"  default="" visibleBindingId="ftpProcessMode" visibleBindingValue="1" alwaysUseInDialogHeightCalc="true">
                 <Label>Camera Folder for FTP file save:</Label>
                 <Description>Camera folder for FTP file save.</Description>
             </Field>
+
+            <Field id="separator-2" type="separator" alwaysUseInDialogHeightCalc="true"/>
 
             <Field type="checkbox" id="enableAutoTimeSync" defaultValue="true" tooltip="Tick to enable synchronisation of camera time to Indigo time" alwaysUseInDialogHeightCalc="true">
                 <Label>Enable Auto Time Sync:</Label>
                 <Description>Enable synchronisation of camera time to Indigo time.</Description>
             </Field>
 
-            <Field id="separator-2" type="separator" alwaysUseInDialogHeightCalc="true"/>
+            <Field id="separator-3" type="separator" alwaysUseInDialogHeightCalc="true"/>
 
             <Field id="cameraPlatform" type="menu" defaultValue="0" tooltip="Select polling interval" alwaysUseInDialogHeightCalc="true">
                 <Label>Camera platform:</Label>
@@ -85,9 +103,9 @@
                 </List>
             </Field>
             <Field id="help-3" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>Select the camera software platform. Newer cameras are likely to be using the Amba platform.</Label>
+                <Label>^ Select the camera software platform. Newer cameras are likely to be using the Amba platform.</Label>
             </Field>
-            <Field id="separator-3" type="separator" alwaysUseInDialogHeightCalc="true"/>
+            <Field id="separator-4" type="separator" alwaysUseInDialogHeightCalc="true"/>
             <Field id="dynamicView" type="menu">
                 <Label>Dynamic Views:</Label>
                 <List class="indigo.devices" filter="com.autologplugin.indigoplugin.dynamicviewcontroller.dynamicView"/>
@@ -96,7 +114,7 @@
                 <Label>Select a dynamic view to be broadcast to if you want to be able to dynamically view the captured images from the camera and keep the dynamic view up-to-date (Use the Dynamic View Controller plugin to set-up a dynamic view device).</Label>
             </Field>
 
-            <Field id="separator-4" type="separator" alwaysUseInDialogHeightCalc="true"/>  
+            <Field id="separator-5" type="separator" alwaysUseInDialogHeightCalc="true"/>  
 
             <Field id="help-5" type="label" alwaysUseInDialogHeightCalc="true">
                 <Label>Use status polling to update the state of the camera periodically.</Label>
@@ -118,7 +136,7 @@
                 </List>
             </Field>
 
-            <Field id="separator-5" type="separator" alwaysUseInDialogHeightCalc="true"/>  
+            <Field id="separator-6" type="separator" alwaysUseInDialogHeightCalc="true"/>  
 
             <Field id="motionDetectionInterval" type="textfield" defaultValue="30" tooltip="Specify Motion Detection Interval" alwaysUseInDialogHeightCalc="true">
                 <Label>Detection Interval (seconds):</Label>

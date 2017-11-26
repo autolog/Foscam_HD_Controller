@@ -517,19 +517,25 @@ class ThreadResponseFromCamera(threading.Thread):
                 pass
             else:
                 if motionDetectAlarm == '2':  # Motion Detection Enabled and motion detected
-                    if self.globals['cameras'][self.cameraDevId]['enableFTP'] and snap_enabled:
-                        # Only retrieve FTP files if FTP enabled and Snap Enabled
-                        self._ftpRetrieve()
-                else:  # Motion Detection Enabled an no motion detected
-                    if (self.globals['cameras'][self.cameraDevId]['enableFTP'] and 
-                        snap_enabled and 
-                        self.globals['cameras'][self.cameraDevId]['motion']['previouslyDetected']):
-                        # Only retrieve FTP files if FTP enabled and if Snap Enabled and motion previously detected
-                        self._ftpRetrieve()  # To pick up any files since motion detection ended
+                    if snap_enabled:
+                        if self.globals['cameras'][self.cameraDevId]['ftpProcessMode'] == 1:  # FTP Client mode
+                        #   Only retrieve FTP files if FTP Client mode enabled and Snap Enabled
+                            self._ftpClientRetrieve()
+                        elif self.globals['cameras'][self.cameraDevId]['ftpProcessMode'] == 2:  # FTP Server mode
+                        #   Only process FTP'd files if FTP Server mode enabled and Snap Enabled
+                            self._ftpServerProcess() 
 
-            self.globals['cameras'][self.cameraDevId]['motion']['previouslyDetected'] = bool(motionDetectAlarm >> 1)  # Only True if value was 2
+                else:  # Motion Detection Enabled and no motion detected
+                    if snap_enabled and self.globals['cameras'][self.cameraDevId]['motion']['previouslyDetected']:
+                        if self.globals['cameras'][self.cameraDevId]['ftpProcessMode'] == 1:  # FTP Client mode
+                        #   Only retrieve FTP files if FTP Client mode enabled and Snap Enabled and motion previously detected
+                            self._ftpClientRetrieve()  # To pick up any files since motion detection ended
+                        elif self.globals['cameras'][self.cameraDevId]['ftpProcessMode'] == 2:  # FTP Server mode
+                        #   Only process FTP'd files if FTP Server mode enabled and Snap Enabled and motion previously detected
+                            self._ftpServerProcess()  # To pick up any files since motion detection ended 
+
+            self.globals['cameras'][self.cameraDevId]['motion']['previouslyDetected'] = bool(motionDetectAlarm >> 1)  # Only True if motionDetectAlarm value was 2
             self.messageHandlingDebugLogger.debug(u"%s [%s] Motion Detect Alarm value: '%s'" % (self.cameraName, self.cameraAddress, str(motionDetectAlarm)))
-
 
             stateImageSel = indigo.kStateImageSel.SensorOff
             uiState = 'off'
@@ -588,7 +594,12 @@ class ThreadResponseFromCamera(threading.Thread):
             self.messageHandlingDebugLogger.debug(u"handleTimerQueuedStatusCommand: %s - Timer ignored as motion detected already off" % (cameraDev.name))   
 
 
-    def _ftpRetrieve(self):
+    def _ftpServerProcess(self):
+        self.messageHandlingDebugLogger.info(u"_ftpServerProcess called for '%s'" % (self.cameraDev.name))   
+
+
+
+    def _ftpClientRetrieve(self):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
@@ -733,7 +744,7 @@ class ThreadResponseFromCamera(threading.Thread):
 
         except StandardError, e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
-            self.messageHandlingDebugLogger.error(u"_ftpRetrieve: StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))
+            self.messageHandlingDebugLogger.error(u"_ftpClientRetrieve: StandardError detected for '%s' at line '%s' = %s" % (self.cameraDev.name, exc_tb.tb_lineno,  e))
 
 
     def processSnapPicture2(self, commandTuple, responseFromCamera):  # 'snapPicture2' Response handling
