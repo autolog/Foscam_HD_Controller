@@ -5,27 +5,10 @@
         <Label>This Plugin controls FOSCAM HD Cameras. 😄</Label>
     </Field>
     <Field id="copyright" type="label">
-        <Label>Copyright © 2016-2107 Autolog</Label>
+        <Label>Copyright © 2019 Autolog</Label>
     </Field>
 
     <Field id="separator-1" type="separator"/>  
-    <Field id="help-1" type="label">
-        <Label>Use Update Check to check for a new release of the Foscam HD Controller plugin on Github. Use plugin menu to update plugin.</Label>
-    </Field>
-    <Field type="checkbox" id="updateCheck" defaultValue="true" tooltip="Tick to turn on checking for new Foscam HD Controller plugin version">
-        <Label>Check for updates:</Label>
-        <Description>Enable to check for new version of Foscam HD Controller plugin.</Description>
-    </Field>
-    <Field id="checkFrequency" type="menu" defaultValue="DAILY" enabledBindingId="updateCheck" tooltip="Select update check frequency">
-        <Label>Check Frequency:</Label>
-        <List>
-            <Option value="DAILY">Check every day</Option>
-            <Option value="WEEKLY">Check every week</Option>
-        </List>
-    </Field>
-
-
-    <Field id="separator-2" type="separator" visibleBindingValue="true"/> 
     <Field type="checkbox" id="monitorDebugEnabled" default="false">
         <Label>Monitoring / debugging:</Label>
         <Description>Enable monitoring and debugging options.</Description>

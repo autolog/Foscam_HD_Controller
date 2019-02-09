@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# FOSCAM HD Controller © Autolog 2016-2107
+# FOSCAM HD Controller © Autolog 2019
 # Requires Indigo 7
 #
 

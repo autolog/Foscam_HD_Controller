@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# FOSCAM HD Controller © Autolog 2016-2107
+# FOSCAM HD Controller © Autolog 2019
 # Requires Indigo 7
 #
 
@@ -21,7 +21,6 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 from constants import *
-from ghpu import GitHubPluginUpdater
 from polling import ThreadPolling
 from sendCommand import ThreadSendCommand
 from responseFromCamera import ThreadResponseFromCamera
@@ -87,9 +86,6 @@ class Plugin(indigo.PluginBase):
 
         self.globals['testSymLink'] = False
 
-        # Initialise dictionary for update checking
-        self.globals['update'] = {}
-
         self.validatePrefsConfigUi(pluginPrefs)  # Validate the Plugin Config before plugin initialisation
 
         self.setDebuggingLevels(pluginPrefs)  # Check monitoring and debug options  
@@ -101,27 +97,9 @@ class Plugin(indigo.PluginBase):
     def __del__(self):
         indigo.PluginBase.__del__(self)
 
-
-    def updatePlugin(self):
-        self.globals['update']['updater'].update()
-
-    def checkForUpdates(self):
-        self.globals['update']['updater'].checkForUpdate()
-
-    def forceUpdate(self):
-        self.globals['update']['updater'].update(currentVersion='0.0.0')
-
-    def checkRateLimit(self):
-        limiter = self.globals['update']['updater'].getRateLimit()
-        indigo.server.log('RateLimit {limit:%d remaining:%d resetAt:%d}' % limiter)
-
     def startup(self):
 
         self.methodTracer.threaddebug(u"CLASS: Plugin")
-
-        # Set-up update checker
-        self.globals['update']['updater'] = GitHubPluginUpdater(self)
-        self.globals['update']['nextCheckTime'] = time()
 
         self.globals['queues'] = {}
         self.globals['queues']['commandToSend'] = {}  # There will be one 'commandToSend' queue for each camera - set-up in camera device start
