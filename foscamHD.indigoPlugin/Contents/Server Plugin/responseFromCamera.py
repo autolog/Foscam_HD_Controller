@@ -196,6 +196,23 @@ class ThreadResponseFromCamera(threading.Thread):
 
         pass
 
+    def processOpenInfraLed(self, commandTuple, responseFromCamera):  # 'openInfraLed' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+
+        params = {}
+        self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getDevState',), params])  # Refresh state
+
+    def processCloseInfraLed(self, commandTuple, responseFromCamera):  # 'closeInfraLed' Response handling
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+
+        params = {}
+        self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getDevState',), params])  # Refresh state
+
+    def processRebootSystem(self, commandTuple, responseFromCamera):  # 'rebootSystem' Response handling
+        self.processGetMotionDetectConfig1(commandTuple, responseFromCamera)
+
+        pass
+
     def processGetMotionDetectConfig(self, commandTuple, responseFromCamera):  # 'motionAlarmGet' Response handling
         self.processGetMotionDetectConfig1(commandTuple, responseFromCamera)
 

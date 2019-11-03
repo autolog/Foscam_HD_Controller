@@ -1,5 +1,25 @@
 <?xml version="1.0"?>
 <Actions>
+    <Action id="rebootCamera" deviceFilter="self">
+        <Name>Reboot Camera</Name>
+        <CallbackMethod>rebootCamera</CallbackMethod>
+    </Action>
+
+    <Action id="infraredToggle" deviceFilter="self">
+        <Name>Infrared Toggle</Name>
+        <CallbackMethod>infraredToggle</CallbackMethod>
+    </Action>
+
+    <Action id="infraredOn" deviceFilter="self">
+        <Name>Infrared On</Name>
+        <CallbackMethod>infraredOn</CallbackMethod>
+    </Action>
+
+    <Action id="infraredOff" deviceFilter="self">
+        <Name>Infrared Off</Name>
+        <CallbackMethod>infraredOff</CallbackMethod>
+    </Action>
+
     <Action id="motionDetectionGet" deviceFilter="self">
         <Name>Get Motion Detection Status</Name>
         <CallbackMethod>motionDetectionGet</CallbackMethod>

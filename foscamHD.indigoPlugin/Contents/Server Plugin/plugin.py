@@ -609,6 +609,45 @@ class Plugin(indigo.PluginBase):
         elif  action.sensorAction == indigo.kSensorAction.RequestStatus:
             self.updateCameraStatus(action, dev)            
 
+
+    def rebootCamera(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('rebootSystem',), params])
+
+    def infraredToggle(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        infraLedState = int(dev.states['infraLedState']) ^ 1
+        if infraLedState == 0:
+            infraLedAction = 'closeInfraLed'
+        else:
+            infraLedAction = 'openInfraLed'
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', (infraLedAction,), params])
+
+    def infraredOn(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('openInfraLed',), params])
+
+    def infraredOff(self, pluginAction, dev):
+        self.methodTracer.threaddebug(u"CLASS: Plugin")
+    
+        if self.checkCameraEnabled(dev, pluginAction.description) == False: return
+
+        params = {}
+        self.globals['queues']['commandToSend'][dev.id].put(['camera', ('closeInfraLed',), params])
+
     def motionDetectionToggle(self, pluginAction, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
     
