@@ -5,65 +5,41 @@
         <Label>This Plugin controls FOSCAM HD Cameras. 😄</Label>
     </Field>
     <Field id="copyright" type="label">
-        <Label>Copyright © 2019 Autolog</Label>
+        <Label>Copyright © 2019-22 Autolog</Label>
     </Field>
 
-    <Field id="separator-1" type="separator"/>  
-    <Field type="checkbox" id="monitorDebugEnabled" default="false">
-        <Label>Monitoring / debugging:</Label>
-        <Description>Enable monitoring and debugging options.</Description>
+	<Field id="space-1" type="label" alwaysUseInDialogHeightCalc="true"><Label/></Field>
+
+    <Field id="separator-1" type="separator" alwaysUseInDialogHeightCalc="true"/>
+	<Field id="header-1" type="label" alwaysUseInDialogHeightCalc="true" fontColor="green">
+        <Label>PLUGIN / INDIGO EVENT LOG LOGGING</Label>
     </Field>
 
-    <Field id="separator-3" type="separator" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"/> 
+	<Field id="space-7" type="label" alwaysUseInDialogHeightCalc="true"><Label/></Field>
 
-    <Field id="help-2" type="label" fontColor="blue" fontSize="small" alignWithControl="true" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>Select monitoring / debugging to be performed by ticking required option(s) below and then clicking Save.</Label>
-    </Field>
+	<Field id="eventLogLevel" type="menu" defaultValue="20" alwaysUseInDialogHeightCalc="true">
+		<Label>Logging Level - Indigo Event Log:</Label>
+		<List>
+			<Option value="10">Debugging Messages</Option>
+			<Option value="15">Camera Communication Logging Messages</Option>
+			<Option value="20">Informational Messages</Option>
+			<Option value="30">Warning Messages</Option>
+			<Option value="40">Error Messages</Option>
+			<Option value="50">Critical Errors Only</Option>
+		</List>
+	</Field>
 
-    <Field type="checkbox" id="debugGeneral" default="false" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>General:</Label>
-        <Description>Debug 'general' processing.</Description>
-    </Field>
-
-     <Field type="checkbox" id="monitorSend" default="false" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>Monitor Send:</Label>
-        <Description>Monitor messages sent to cameras.</Description>
-    </Field>
-
-    <Field type="checkbox" id="debugSend" default="false" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>Debug Send:</Label>
-        <Description>Debug 'send to camera' processing.</Description>
-    </Field>
-
-    <Field type="checkbox" id="monitorReceive" default="false" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>Monitor camera response:</Label>
-        <Description>Monitor responses received from cameras.</Description>
-    </Field>
-
-    <Field type="checkbox" id="debugReceive" defaultValue="false" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>Debug Receive:</Label>
-        <Description>Debug responses received from cameras processing.</Description>
-    </Field>
-
-    <Field type="checkbox" id="monitorMessageHandling" default="false" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>Monitor Message Handling:</Label>
-        <Description>Monitor message handling.</Description>
-    </Field>
-
-    <Field type="checkbox" id="debugMessageHandling" default="false" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>Debug Message Handling:</Label>
-        <Description>Debug 'message handling' processing.</Description>
-    </Field>
-
-   <Field type="checkbox" id="debugPolling" defaultValue="false"  visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" tooltip="Enable debugging of device polling." alwaysUseInDialogHeightCalc="true">
-        <Label>Polling:</Label>
-        <Description>Debug 'polling' processing.</Description>
-    </Field>
-
-    <Field type="checkbox" id="debugMethodTrace" default="false" visibleBindingId="monitorDebugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-        <Label>Method Trace:</Label>
-        <Description>Trace Method calls.</Description>
-    </Field>
+	<Field id="pluginLogLevel" type="menu" defaultValue="20" alwaysUseInDialogHeightCalc="true">
+		<Label>Logging Level - Plugin Event Log:</Label>
+		<List>
+			<Option value="10">Debugging Messages</Option>
+			<Option value="15">Camera Communication Logging Messages</Option>
+			<Option value="20">Informational Messages</Option>
+			<Option value="30">Warning Messages</Option>
+			<Option value="40">Error Messages</Option>
+			<Option value="50">Critical Errors Only</Option>
+		</List>
+	</Field>
 
 
 

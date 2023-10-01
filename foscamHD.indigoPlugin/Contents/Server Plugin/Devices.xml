@@ -60,8 +60,7 @@
             </Field>
 
             <Field id="help-1-2" type="label" visibleBindingId="ftpProcessMode" visibleBindingValue="2" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>^ Select 'FTP Server mode' to enable processing of snap images FTP'd by the camera to your Apple Mac's FTP Server. The plugin will monitor motion detection and check the folder specified below for new images that have been FTP'd to the Apple Mac FTP server by the camera. The camera should be set to store snap images to FTP and the FTP credentials for the Apple Mac's FTP server should be setup on the camera.</Label>
-            </Field>
+                <Label>^ Select 'FTP Server mode' to enable processing of snap images FTP'd by the camera to your Apple Mac's FTP Server. The plugin will monitor motion detection and broadcast that motion has beeen detected if a Dynamic View has been specified below. The camera should be set to store snap images to FTP and the FTP credentials for the Apple Mac's FTP server should be setup on the camera.</Label>            </Field>
 
             <Field id="ftpPort" type="textfield" default="50021" visibleBindingId="ftpProcessMode" visibleBindingValue="1" alwaysUseInDialogHeightCalc="true">
                 <Label>Camera FTP Port:</Label>
@@ -95,7 +94,7 @@
 
             <Field id="separator-3" type="separator" alwaysUseInDialogHeightCalc="true"/>
 
-            <Field id="cameraPlatform" type="menu" defaultValue="0" tooltip="Select polling interval" alwaysUseInDialogHeightCalc="true">
+            <Field id="cameraPlatform" type="menu" defaultValue="1" tooltip="Select polling interval" alwaysUseInDialogHeightCalc="true">
                 <Label>Camera platform:</Label>
                 <List>
                     <Option value="0">Original</Option>
@@ -107,11 +106,11 @@
             </Field>
             <Field id="separator-4" type="separator" alwaysUseInDialogHeightCalc="true"/>
             <Field id="dynamicView" type="menu">
-                <Label>Dynamic Views:</Label>
+                <Label>Dynamic View:</Label>
                 <List class="indigo.devices" filter="com.autologplugin.indigoplugin.dynamicviewcontroller.dynamicView"/>
             </Field>
             <Field id="help-4" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>Select a dynamic view to be broadcast to if you want to be able to dynamically view the captured images from the camera and keep the dynamic view up-to-date (Use the Dynamic View Controller plugin to set-up a dynamic view device).</Label>
+                <Label>Select a dynamic view to be broadcast to if you want to be able to dynamically view the captured images from the camera and keep the dynamic view up-to-date (Use the Dynamic View Controller plugin to set up a dynamic view device).</Label>
             </Field>
 
             <Field id="separator-5" type="separator" alwaysUseInDialogHeightCalc="true"/>  
@@ -231,13 +230,13 @@
             </State>
             <State id="isWifiConnected">
                 <ValueType>String</ValueType> 
-                <TriggerLabel>Is WiFi Connected</TriggerLabel>
-                <ControlPageLabel>Is WiFi Connected</ControlPageLabel>
+                <TriggerLabel>Is Wi-Fi Connected</TriggerLabel>
+                <ControlPageLabel>Is Wi-Fi Connected</ControlPageLabel>
             </State>
             <State id="wifiConnectedAP">
                 <ValueType>String</ValueType> 
-                <TriggerLabel>WiFi SSID</TriggerLabel>
-                <ControlPageLabel>WiFi SSID</ControlPageLabel>
+                <TriggerLabel>Wi-Fi SSID</TriggerLabel>
+                <ControlPageLabel>Wi-Fi SSID</ControlPageLabel>
             </State>
             <State id="infraLedState">
                 <ValueType>String</ValueType> 

@@ -5,6 +5,11 @@
         <CallbackMethod>rebootCamera</CallbackMethod>
     </Action>
 
+    <Action id="refreshCamera" deviceFilter="self">
+        <Name>Refresh Camera</Name>
+        <CallbackMethod>refreshCamera</CallbackMethod>
+    </Action>
+
     <Action id="infraredToggle" deviceFilter="self">
         <Name>Infrared Toggle</Name>
         <CallbackMethod>infraredToggle</CallbackMethod>

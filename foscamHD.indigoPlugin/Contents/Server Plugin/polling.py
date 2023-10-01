@@ -1,40 +1,36 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# FOSCAM HD Controller © Autolog 2019
-# Requires Indigo 7
+# FOSCAM HD Controller © Autolog 2019-2023
+# Requires Indigo 2022.1+
 #
 
-try:
-    import indigo
-except ImportError:
-    pass
-import logging
+# ============================== Native Imports ===============================
 import sys
 import threading
 from time import sleep
+import traceback
 
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
-
+# ============================== Custom Imports ===============================
 from constants import *
+try:
+    # noinspection PyUnresolvedReferences
+    import indigo
+except ImportError:
+    pass
+
+
 
 class ThreadPolling(threading.Thread):
 
-    def __init__(self, globals, devId, event):
+    def __init__(self, plugin_globals, devId, event):
 
         threading.Thread.__init__(self)
 
-        self.globals = globals
+        self.globals = plugin_globals
 
         self.pollingLogger = logging.getLogger("Plugin.polling")
-        self.pollingLogger.setLevel(self.globals['debug']['debugPolling'])
-
-        self.methodTracer = logging.getLogger("Plugin.method")  
-        self.methodTracer.setLevel(self.globals['debug']['debugMethodTrace'])
-
+ 
         self.threadStop = event
 
         self.cameraDevId = int(devId)  # Set Indigo Device id (for camera) to value passed in Thread invocation
@@ -42,58 +38,54 @@ class ThreadPolling(threading.Thread):
         self.cameraAddress = self.cameraDev.address
         self.cameraName = self.cameraDev.name
 
-        self.previousPollingSeconds = self.globals['polling'][self.cameraDevId]['seconds']
+        self.previousPollingSeconds = self.globals[POLLING][self.cameraDevId][SECONDS]
 
-        self.globals['threads']['pollCamera'][self.cameraDevId]['threadActive'] = True
+        self.globals[THREADS][POLL_CAMERA][self.cameraDevId][THREAD_ACTIVE] = True
 
-        self.pollingLogger.info(u"Initialised 'ThreadPolling' Thread for %s [%s] to poll at %i second intervals" % (self.cameraName, self.cameraAddress, self.globals['polling'][self.cameraDevId]['seconds']))  
+        self.pollingLogger.info(f"Initialised 'ThreadPolling' Thread for {self.cameraName} [{self.cameraAddress}] to poll at {self.globals[POLLING][self.cameraDevId][SECONDS]} second intervals")
 
+    def exception_handler(self, exception_error_message, log_failing_statement):
+        filename, line_number, method, statement = traceback.extract_tb(sys.exc_info()[2])[-1]  # noqa [Ignore duplicate code warning]
+        module = filename.split('/')
+        log_message = f"'{exception_error_message}' in module '{module[-1]}', method '{method}'"
+        if log_failing_statement:
+            log_message = log_message + f"\n   Failing statement [line {line_number}]: '{statement}'"
+        else:
+            log_message = log_message + f" at line {line_number}"
+        self.pollingLogger.error(log_message)
 
     def run(self):
 
         try:  
-            self.methodTracer.threaddebug(u"ThreadPolling")
+            sleep(DELAY_START_POLLING)  # Allow devices to start?
 
-            sleep(kDelayStartPolling)  # Allow devices to start?
-
-            self.methodTracer.threaddebug(u"ThreadPolling")
-
-            self.pollingLogger.debug(u"'Polling' Thread for %s [%s] initialised and now running" % (self.cameraName, self.cameraAddress))  
+            self.pollingLogger.debug(f"'Polling' Thread for {self.cameraName} [{self.cameraAddress}] initialised and now running")
 
             params = {}
-            self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getDevState',), params])
+            self.globals[QUEUES][COMMAND_TO_SEND][self.cameraDevId].put([CAMERA, ('getDevState',), params])
 
-            self.pollingLogger.debug(u"'%s' [%s] Polling thread NOW running and command queued" % (self.cameraName, self.cameraAddress))
+            self.pollingLogger.debug(f"'{self.cameraName}' [{self.cameraAddress}] Polling thread NOW running and command queued")
 
-            while not self.threadStop.wait(float(self.globals['polling'][self.cameraDevId]['seconds'])):
-
-                # Check if monitoring / debug options have changed and if so set accordingly
-                if self.globals['debug']['previousDebugPolling'] != self.globals['debug']['debugPolling']:
-                    self.globals['debug']['previousDebugPolling'] = self.globals['debug']['debugPolling']
-                    self.pollingLogger.setLevel(self.globals['debug']['debugPolling'])
-                if self.globals['debug']['previousDebugMethodTrace'] !=self.globals['debug']['debugMethodTrace']:
-                    self.globals['debug']['previousDebugMethodTrace'] = self.globals['debug']['debugMethodTrace']
-                    self.methodTracer.setLevel(self.globals['debug']['debugMethodTrace'])
-
+            while not self.threadStop.wait(float(self.globals[POLLING][self.cameraDevId][SECONDS])):
                 # Check if polling seconds interval has changed and if so set accordingly
-                if self.globals['polling'][self.cameraDevId]['seconds'] != self.previousPollingSeconds:
-                    self.pollingLogger.info(u"'%s' [%s] Changing to poll at %i second intervals (was %i seconds)" % (self.cameraName, self.cameraAddress, self.globals['polling'][self.cameraDevId]['seconds'], self.previousPollingSeconds))  
-                    self.previousPollingSeconds = self.globals['polling'][self.cameraDevId]['seconds']
+                if self.globals[POLLING][self.cameraDevId][SECONDS] != self.previousPollingSeconds:
+                    self.pollingLogger.info(f"'{self.cameraName}' [{self.cameraAddress}] Changing to poll at {self.globals[POLLING][self.cameraDevId][SECONDS]:0.2f} second intervals"
+                                            f" (was {self.previousPollingSeconds:d} seconds)")
+                    self.previousPollingSeconds = self.globals[POLLING][self.cameraDevId][SECONDS]
 
-                self.pollingLogger.debug(u"'%s' [%s] Start of While Loop ..." % (self.cameraName, self.cameraAddress))
+                self.pollingLogger.debug(f"'{self.cameraName}' [{self.cameraAddress}] Start of While Loop ...")
 
                 if self.threadStop.isSet():  # Check if polling thread to end and if so break out of while loop
                     break
 
-                params = {}
-                self.globals['queues']['commandToSend'][self.cameraDevId].put(['camera', ('getDevState',), params])
+                params = dict()
+                self.globals[QUEUES][COMMAND_TO_SEND][self.cameraDevId].put([CAMERA, ('getDevState',), params])
 
-            self.pollingLogger.debug(u"Polling thread for camera %s [%s] ending" % (self.cameraName, self.cameraAddress)) 
+            self.pollingLogger.debug(f"Polling thread for camera {self.cameraName} [{self.cameraAddress}] ending")
 
-        except Exception, e:
-            self.pollingLogger.error(u"Polling Thread for camera %s [%s] encountered an error at line %s: %s" % (self.cameraName, self.cameraAddress, sys.exc_traceback.tb_lineno, e))   
+        except Exception as exception_error:
+            self.exception_handler(exception_error, True)  # Log error and display failing statement
 
-        self.pollingLogger.debug(u"Polling Thread for camera %s [%s] ended." % (self.cameraName, self.cameraAddress))    
+        self.pollingLogger.debug(f"Polling Thread for camera {self.cameraName} [{self.cameraAddress}] ended.")
  
-        self.globals['threads']['pollCamera'][self.cameraDevId]['threadActive'] = False
-
+        self.globals[THREADS][POLL_CAMERA][self.cameraDevId][THREAD_ACTIVE] = False
