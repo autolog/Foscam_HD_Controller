@@ -601,7 +601,11 @@ class ThreadResponseFromCamera(threading.Thread):
 
     def _ftpServerProcess(self):
         self.responseFromCameraLogger.debug(f"_ftpServerProcess called for '{self.cameraDev.name}'")
-        if self.globals[CAMERAS][self.cameraDevId][MOTION][DYNAMIC_VIEW] != "":
+        try:
+            dynamic_view = int(self.globals[CAMERAS][self.cameraDevId][MOTION][DYNAMIC_VIEW])
+        except ValueError:
+            dynamic_view = 0
+        if dynamic_view != 0:
             indigo.server.broadcastToSubscribers("updateDynamicView", self.globals[CAMERAS][self.cameraDevId][MOTION][DYNAMIC_VIEW])
 
     def _ftpClientRetrieve(self, initialise):
@@ -809,7 +813,11 @@ class ThreadResponseFromCamera(threading.Thread):
             if initialise:
                 self.responseFromCameraLogger.info(f"... Syncing complete.")
 
-            if self.globals[CAMERAS][self.cameraDevId][MOTION][DYNAMIC_VIEW] != "":
+            try:
+                dynamic_view = int(self.globals[CAMERAS][self.cameraDevId][MOTION][DYNAMIC_VIEW])
+            except ValueError:
+                dynamic_view = 0
+            if dynamic_view != 0:
                 indigo.server.broadcastToSubscribers("updateDynamicView", self.globals[CAMERAS][self.cameraDevId][MOTION][DYNAMIC_VIEW])
 
             # self.globals['cameras'][self.cameraDevId]['motion']['imageFolder'] = ''  # Force to latest folder

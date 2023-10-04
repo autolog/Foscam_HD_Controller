@@ -5,13 +5,13 @@
         <Label>This Plugin controls FOSCAM HD Cameras. 😄</Label>
     </Field>
     <Field id="copyright" type="label">
-        <Label>Copyright © 2019-22 Autolog</Label>
+        <Label>Copyright © 2019-23 Autolog</Label>
     </Field>
 
 	<Field id="space-1" type="label" alwaysUseInDialogHeightCalc="true"><Label/></Field>
 
     <Field id="separator-1" type="separator" alwaysUseInDialogHeightCalc="true"/>
-	<Field id="header-1" type="label" alwaysUseInDialogHeightCalc="true" fontColor="green">
+	<Field id="header-1" type="label" alwaysUseInDialogHeightCalc="true" fontColor="orange">
         <Label>PLUGIN / INDIGO EVENT LOG LOGGING</Label>
     </Field>
 

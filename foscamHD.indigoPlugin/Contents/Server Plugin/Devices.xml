@@ -107,7 +107,8 @@
             <Field id="separator-4" type="separator" alwaysUseInDialogHeightCalc="true"/>
             <Field id="dynamicView" type="menu">
                 <Label>Dynamic View:</Label>
-                <List class="indigo.devices" filter="com.autologplugin.indigoplugin.dynamicviewcontroller.dynamicView"/>
+<!--                <List class="indigo.devices" filter="com.autologplugin.indigoplugin.dynamicviewcontroller.dynamicView"/>-->
+                <List class="self" method="list_dynamic_view_devices" dynamicReload="true"/>
             </Field>
             <Field id="help-4" type="label" alwaysUseInDialogHeightCalc="true" fontColor="darkgray" fontSize="small" alignWithControl="true">
                 <Label>Select a dynamic view to be broadcast to if you want to be able to dynamically view the captured images from the camera and keep the dynamic view up-to-date (Use the Dynamic View Controller plugin to set up a dynamic view device).</Label>

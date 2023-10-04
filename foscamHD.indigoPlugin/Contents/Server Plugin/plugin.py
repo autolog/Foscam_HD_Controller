@@ -277,7 +277,11 @@ class Plugin(indigo.PluginBase):
             # self.globals[CAMERAS][dev.id][MOTION][DETECTION_ENABLED] = False
             self.globals[CAMERAS][dev.id][MOTION][PREVIOUSLY_DETECTED] = False
             self.globals[CAMERAS][dev.id][MOTION][DETECTION_INTERVAL] = float(dev.pluginProps.get("motionDetectionInterval", 30.0))
-            self.globals[CAMERAS][dev.id][MOTION][DYNAMIC_VIEW] = str(dev.pluginProps.get("dynamicView", ""))
+            try:
+                dynamic_view = int(dev.pluginProps.get("dynamicView", 0))
+            except ValueError:
+                dynamic_view = 0
+            self.globals[CAMERAS][dev.id][MOTION][DYNAMIC_VIEW] = dynamic_view
             self.globals[CAMERAS][dev.id][MOTION][TIMER_ACTIVE] = False
 
             self.globals[CAMERAS][dev.id][MOTION][RING_ENABLED] = False
@@ -415,7 +419,7 @@ class Plugin(indigo.PluginBase):
         pluginProps["enableAutoTimeSync"] = pluginProps.get("enableAutoTimeSync", True)
         pluginProps["ShowPasswordButtonDisplayed"] = pluginProps.get("ShowPasswordButtonDisplayed", True)
 
-        pluginProps["dynamicView"] = pluginProps.get("dynamicView", "")
+        pluginProps["dynamicView"] = pluginProps.get("dynamicView", 0)
 
         if pluginProps["ShowPasswordButtonDisplayed"]:
             pluginProps["passwordInClearText"] = '*' * len(pluginProps.get("password", ""))
@@ -793,3 +797,16 @@ class Plugin(indigo.PluginBase):
 
         params = dict()
         pass
+
+    def list_dynamic_view_devices(self, filter="", values_dict=None, type_id="", target_id=0):  # noqa [parameter value is not used]
+        try:
+            dynamic_view_devices_list = list()
+            dynamic_view_devices_list.append((0, "None"))
+
+            for dev in indigo.devices.iter("com.autologplugin.indigoplugin.dynamicviewcontroller.dynamicView"):
+                dynamic_view_devices_list.append((dev.id, dev.name))
+
+            return dynamic_view_devices_list
+
+        except Exception as exception_error:
+            self.exception_handler(exception_error, True)  # Log error and display failing statement
